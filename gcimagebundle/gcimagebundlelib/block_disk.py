@@ -142,6 +142,8 @@ class FsRawDisk(fs_copy.FsCopy):
       utils.MakePartitionTable(disk_file_path)
       # Pass 1MB as start to avoid 'Warning: The resulting partition is not
       # properly aligned for best performance.' from parted.
+      
+      # TODO: feoff - here we should add grub loader too.
       partition_start = 1024 * 1024
 
     # Create a new partition starting at partition_start of size
@@ -168,6 +170,10 @@ class FsRawDisk(fs_copy.FsCopy):
         self._ProcessOverwriteList(mount_point)
         self._CleanupNetwork(mount_point)
         self._UpdateFstab(mount_point, uuid)
+        # TODO: add grub here
+        add_grub = True
+        if add_grub:
+            self._AddGrub(disk_file_path , mount_point)
 
     tar_entries = []
 
@@ -190,6 +196,19 @@ class FsRawDisk(fs_copy.FsCopy):
       for chunk in iter(lambda: tar_file.read(8192), ''):
         h.update(chunk)
     return (self._fs_size, h.hexdigest())
+
+  def _AddGrub(self , filepath , mountpoint):
+    """
+    Adds Grub boot loader to the disk and points it to boot from the first partition 
+    """
+    logging.info("installing grub")
+    disk_loop_dev = tempfile.mktemp("/dev/loop-grub")
+    # createa a loop for the whole disk
+    utils.RunCommand("losetup " + disk_loop_dev + " " + filepath)
+    # install grub2 there
+    utils.RunCommand("grub-install " + str(filepath) + " --boot-directory=" + mountpoint+"/boot")
+    return
+
 
   def _CopySourceFiles(self, mount_point):
     """Copies all source files/directories to a mounted raw disk.

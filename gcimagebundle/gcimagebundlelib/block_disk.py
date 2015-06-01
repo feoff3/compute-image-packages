@@ -207,6 +207,7 @@ class FsRawDisk(fs_copy.FsCopy):
     utils.RunCommand("losetup " + disk_loop_dev + " " + filepath)
     # install grub2 there
     utils.RunCommand("grub-install " + str(filepath) + " --boot-directory=" + mountpoint+"/boot")
+    utils.RunCommand("losetup -d " + disk_loop_dev);
     return
 
 

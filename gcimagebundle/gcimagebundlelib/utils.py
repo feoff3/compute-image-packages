@@ -36,21 +36,37 @@ class TarAndGzipFileException(Exception):
 class LoadDiskImage(object):
   """Loads raw disk image using kpartx."""
 
-  def __init__(self, file_path):
+  def __init__(self, file_path, virtual_image = True):
     """Initializes LoadDiskImage object.
 
     Args:
       file_path: a path to a file containing raw disk image.
+      
+      virtual_image: a boolean specifying whether the file is virtual image (not raw file) supported by qemu-img
 
     Returns:
       A list of devices for every partition found in an image.
     """
     self._file_path = file_path
+    self._virtual_image = virtual_image
+    self._ndb_path = "/dev/ndb0"
 
   def __enter__(self):
     """Map disk image as a device."""
     SyncFileSystem()
-    kpartx_cmd = ['kpartx', '-a', '-v', '-s', self._file_path]
+
+    mountpath = self._file_path
+
+    # VFedorov: we shall use non-kpartx implimentation when image is not raw
+    if self._virtual_image:
+        mountpath =  self._ndb_path
+        modprobe_cmd = ['modprobe', 'nbd']
+        logging.info(">>> Starting qemu block device emulation")
+        output = RunCommand(modprobe_cmd)
+        nbd_cmd = ["qemu-nbd", "-c" , mountpath, file_path]
+        output = RunCommand(nbd_cmd)
+
+    kpartx_cmd = ['kpartx', '-a', '-v', '-s', mountpath]
     output = RunCommand(kpartx_cmd)
     devs = []
     for line in output.splitlines():
@@ -71,8 +87,16 @@ class LoadDiskImage(object):
     """
     SyncFileSystem()
     time.sleep(2)
+
+    #TODO: should check if kpartx was done previously
+    #may fail on the faulty path
     kpartx_cmd = ['kpartx', '-d', '-v', '-s', self._file_path]
     RunCommand(kpartx_cmd)
+
+    if self._virtual_image:
+        mountpath =  self._ndb_path
+        nbd_cmd = ["qemu-nbd", "-d" , mountpath]
+        output = RunCommand(nbd_cmd)
 
 
 class MountFileSystem(object):

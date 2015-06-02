@@ -101,20 +101,31 @@ class LinuxPlatform(os_platform.Platform):
     """Creates any platform specific special files."""
     retval = []
     console_dev = os.makedev(5, 1)
+    if (os.path.exists(tmpdir + 'console')): 
+        os.remove(tmpdir + 'console')
     os.mknod(tmpdir + 'console', stat.S_IFCHR |
              stat.S_IRUSR | stat.S_IWUSR, console_dev)
     retval.append((tmpdir + 'console', 'dev/console'))
+
     null_dev = os.makedev(1, 3)
+    if (os.path.exists(tmpdir + 'null')): 
+        os.remove(tmpdir + 'null')
     os.mknod(tmpdir + 'null', stat.S_IFCHR |
              stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP |
              stat.S_IROTH | stat.S_IWOTH, null_dev)
     retval.append((tmpdir + 'null', 'dev/null'))
+
     tty_dev = os.makedev(5, 0)
+    if (os.path.exists(tmpdir + 'tty')): 
+        os.remove(tmpdir + 'tty')
     os.mknod(tmpdir + 'tty', stat.S_IFCHR |
              stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP |
              stat.S_IROTH | stat.S_IWOTH, tty_dev)
     retval.append((tmpdir + 'tty', 'dev/tty'))
+
     zero_dev = os.makedev(1, 5)
+    if (os.path.exists(tmpdir + 'zero')): 
+        os.remove(tmpdir + 'zero')
     os.mknod(tmpdir + 'zero', stat.S_IFCHR |
              stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP |
              stat.S_IROTH | stat.S_IWOTH, zero_dev)

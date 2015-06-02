@@ -42,15 +42,18 @@ class InvalidRawDiskError(Exception):
 class FsRawDisk(fs_copy.FsCopy):
   """Creates a raw disk copy of OS image and bundles it into gzipped tar."""
 
-  def __init__(self, fs_size, fs_type):
+  def __init__(self, fs_size, fs_type , file_name="disk.raw"):
     """Constructor for FsRawDisk class.
 
     Args:
       fs_size: Size of the raw disk.
+      fs_type: filesystem to init on the new disk
+      file_name: filename of the disk file
     """
     super(FsRawDisk, self).__init__()
     self._fs_size = fs_size
     self._fs_type = fs_type
+    self._disk_file_name = file_name
 
   def _ResizeFile(self, file_path, file_size):
     logging.debug('Resizing %s to %s', file_path, file_size)
@@ -122,7 +125,7 @@ class FsRawDisk(fs_copy.FsCopy):
     """
 
     # Create sparse file with specified size
-    disk_file_path = os.path.join(self._scratch_dir, 'disk.raw')
+    disk_file_path = os.path.join(self._scratch_dir, self._disk_file_name)
     with open(disk_file_path, 'wb') as _:
       pass
     self._excludes.append(exclude_spec.ExcludeSpec(disk_file_path))
@@ -171,9 +174,11 @@ class FsRawDisk(fs_copy.FsCopy):
         self._CleanupNetwork(mount_point)
         self._UpdateFstab(mount_point, uuid)
         # TODO: add grub here
+        # should move add_grub to the parm
+        # maybe to move it to utils?
         add_grub = True
         if add_grub:
-            self._AddGrub(disk_file_path , mount_point)
+            utils.InstallGrub(mountpoint +"/boot" , disk_file_path)
 
     tar_entries = []
 
@@ -197,18 +202,7 @@ class FsRawDisk(fs_copy.FsCopy):
         h.update(chunk)
     return (self._fs_size, h.hexdigest())
 
-  def _AddGrub(self , filepath , mountpoint):
-    """
-    Adds Grub boot loader to the disk and points it to boot from the first partition 
-    """
-    logging.info("installing grub")
-    disk_loop_dev = tempfile.mktemp("/dev/loop-grub")
-    # createa a loop for the whole disk
-    utils.RunCommand("losetup " + disk_loop_dev + " " + filepath)
-    # install grub2 there
-    utils.RunCommand("grub-install " + str(filepath) + " --boot-directory=" + mountpoint+"/boot")
-    utils.RunCommand("losetup -d " + disk_loop_dev);
-    return
+ 
 
 
   def _CopySourceFiles(self, mount_point):
@@ -336,9 +330,9 @@ class RootFsRaw(FsRawDisk):
   """
 
   def __init__(
-      self, fs_size, fs_type, skip_disk_space_check, statvfs = os.statvfs):
+      self, fs_size, fs_type, skip_disk_space_check, statvfs = os.statvfs , disk_file_name="disk.raw"):
     # statvfs parameter is for unit test to mock out os.statvfs call.
-    super(RootFsRaw, self).__init__(fs_size, fs_type)
+    super(RootFsRaw, self).__init__(fs_size, fs_type , disk_file_name)
     self._skip_disk_space_check = skip_disk_space_check
     self._statvfs = statvfs
 

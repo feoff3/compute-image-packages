@@ -49,7 +49,7 @@ class LoadDiskImage(object):
     """
     self._file_path = file_path
     self._virtual_image = virtual_image
-    self._ndb_path = "/dev/ndb0"
+    self._ndb_path = "/dev/nbd0"
 
   def __enter__(self):
     """Map disk image as a device."""
@@ -477,3 +477,15 @@ def IsRunningOnGCE():
     logging.warning('Cannot reach metadata server: %s' % e.reason)
 
   return False
+
+
+def InstallGrub(boot_directory_path , disk_file_path):
+    """Adds Grub boot loader to the disk and points it to boot from the partition"""
+    logging.info(">>> Installing grub")
+    disk_loop_dev = tempfile.mktemp("/dev/loop-grub")
+    # createa a loop for the whole disk
+    utils.RunCommand(["losetup" , "disk_loop_dev" , "disk_file_path"])
+    # install grub2 there
+    utils.RunCommand(["grub-install", str(filepath), "--boot-directory=" + boot_directory_path])
+    utils.RunCommand(["losetup", "-d" , disk_loop_dev]);
+    return

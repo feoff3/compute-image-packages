@@ -126,8 +126,8 @@ class FsRawDisk(fs_copy.FsCopy):
 
     # Create sparse file with specified size
     disk_file_path = os.path.join(self._scratch_dir, self._disk_file_name)
-    with open(disk_file_path, 'wb') as _:
-      pass
+   # with open(disk_file_path, 'wb') as _:
+   #   pass
     self._excludes.append(exclude_spec.ExcludeSpec(disk_file_path))
 
     logging.info('Initializing disk file')

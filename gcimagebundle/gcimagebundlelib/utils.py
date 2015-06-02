@@ -58,12 +58,13 @@ class LoadDiskImage(object):
     mountpath = self._file_path
 
     # VFedorov: we shall use non-kpartx implimentation when image is not raw
+    #TODO: move this class to Nbd override 
     if self._virtual_image:
         mountpath =  self._ndb_path
         modprobe_cmd = ['modprobe', 'nbd']
         logging.info(">>> Starting qemu block device emulation")
         output = RunCommand(modprobe_cmd)
-        nbd_cmd = ["qemu-nbd", "-c" , mountpath, file_path]
+        nbd_cmd = ["qemu-nbd", "-c" , mountpath, self._file_path]
         output = RunCommand(nbd_cmd)
 
     kpartx_cmd = ['kpartx', '-a', '-v', '-s', mountpath]

@@ -178,7 +178,8 @@ class FsRawDisk(fs_copy.FsCopy):
         # maybe to move it to utils?
         add_grub = True
         if add_grub:
-            utils.InstallGrub(mount_point +"/boot" , disk_file_path)
+            utils.InstallGrub(mount_point, devices[0])
+   
 
     tar_entries = []
 

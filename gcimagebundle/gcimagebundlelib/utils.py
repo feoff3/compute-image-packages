@@ -480,13 +480,17 @@ def IsRunningOnGCE():
   return False
 
 
-def InstallGrub(boot_directory_path , disk_file_path):
+def InstallGrub(mount_point , partition_dev):
     """Adds Grub boot loader to the disk and points it to boot from the partition"""
     logging.info(">>> Installing grub")
-    disk_loop_dev = tempfile.mktemp("/dev/loop-grub")
-    # createa a loop for the whole disk
-    utils.RunCommand(["losetup" , "disk_loop_dev" , "disk_file_path"])
-    # install grub2 there
-    utils.RunCommand(["grub-install", str(filepath), "--boot-directory=" + boot_directory_path])
-    utils.RunCommand(["losetup", "-d" , disk_loop_dev]);
-    return
+    partition_path = partition_dev
+    logging.debug("The partition is " + partition_path)
+    if str(partition_path).endswith("p1"):
+        diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
+        diskpath = "/dev/" + diskpath
+        # install grub2 there
+        utils.RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point])
+        return
+
+    logging.error("!!!ERROR: cannot find a partition to install GRUB")
+    raise OSError("Cannot find partition to install GRUB")

@@ -331,8 +331,8 @@ class RootFsRaw(FsRawDisk):
   """
 
   def __init__(
-      self, fs_size, fs_type, skip_disk_space_check, statvfs = os.statvfs , disk_file_name="disk.raw"):
-    # statvfs parameter is for unit test to mock out os.statvfs call.
+      self, fs_size, fs_type, skip_disk_space_check, statvfs = os.statvfs , disk_file_name = "disk.raw"):
+    # statvfs parameter is for unit test to mock out os.statvfs call. 
     super(RootFsRaw, self).__init__(fs_size, fs_type , disk_file_name)
     self._skip_disk_space_check = skip_disk_space_check
     self._statvfs = statvfs

@@ -489,7 +489,7 @@ def InstallGrub(mount_point , partition_dev):
         diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
         diskpath = "/dev/" + diskpath
         # install grub2 there
-        utils.RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point])
+        RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point])
         return
 
     logging.error("!!!ERROR: cannot find a partition to install GRUB")

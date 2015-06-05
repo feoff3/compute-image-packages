@@ -189,11 +189,14 @@ class FsRawDisk(fs_copy.FsCopy):
       tar_entries.append(manifest_file_path)
 
     tar_entries.append(disk_file_path)
+    
     logging.info('Creating tar.gz archive')
     utils.TarAndGzipFile(tar_entries,
                          self._output_tarfile)
+    # Removed the deletion of file
     for tar_entry in tar_entries:
-      os.remove(tar_entry)
+        if not self._output_tarfile == tar_entry:
+            os.remove(tar_entry)
 
     # TODO(user): It would be better to compute tar.gz file hash during
     # archiving.

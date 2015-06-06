@@ -187,6 +187,10 @@ def MakePartition(file_path, partition_type, fs_type, start, end):
   parted_cmd = ['parted', file_path, 'unit B', 'mkpart', partition_type,
                 fs_type, str(start), str(end)]
   RunCommand(parted_cmd)
+  # set boot 
+  # TODO: move to separate function
+  parted_cmd = ['parted', file_path, 'set', '1'  , 'boot' , 'on']
+  RunCommand(parted_cmd)
 
 
 def MakeFileSystem(dev_path, fs_type, uuid=None):

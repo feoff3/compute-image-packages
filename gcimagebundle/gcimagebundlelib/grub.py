@@ -55,31 +55,31 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     \t insmod ext2\n\
     \t insmod ext3\n\
     \t insmod xfs\n\
+    \t insmod gzio\n\
+    \t insmod part_msdos\n\
     \t set root='(hd0,1)'\n"
     searchuuid = "\t search --no-floppy --fs-uuid --set " + partition_uuid + "\n"
 
     entry_contents = defgrubparms + searchuuid
 
     # we use the same linux kernel and parms just switching its root
-    linux_string = "linux "
-    linux_entry_pos=original_menu_contents.find(linux_string)
-    if linux_entry_pos == -1:
-        logging.error("!!!ERROR: Couldn't parse grub config menu entry! ")
+    matches = re.findall("\slinux\s.*$" , original_menu_contents, re.MULTILINE)
+    if len(matches) == 0:
+        logging.error("!!!ERROR: Couldn't parse grub config menu entry! No linux entry found! ")
         logging.error("Config " + original_menuentry)
         raise LookupError()
-    linux_row = original_menu_contents[linux_entry_pos:].splitlines()[0]
+    linux_row = matches[0]
     linux_row = re.sub("root=([^\s]*)" , "root=UUID="+partition_uuid , linux_row)
 
     entry_contents = entry_contents + linux_row + "\n"
     
     #then we add initrd entry as-is
-    initrd_string = "initrd"
-    initrd_entry_pos=original_menu_contents.find(initrd_string)
-    if initrd_entry_pos == -1:
-        logging.error("!!!ERROR: Couldn't parse grub config menu entry! ")
+    matches = re.findall("\sinitrd\s.*$" , original_menu_contents, re.MULTILINE)
+    if len(matches) == 0:
+        logging.error("!!!ERROR: Couldn't parse grub config menu entry! No initrd entry found")
         logging.error("Config " + original_menuentry)
         raise LookupError()
-    initrd_row = original_menu_contents[initrd_entry_pos:].splitlines()[0]
+    initrd_row = matches[0]
 
     entry_contents = entry_contents + initrd_row + "\n"
 

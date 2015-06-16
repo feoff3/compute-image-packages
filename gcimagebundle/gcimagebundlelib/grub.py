@@ -36,6 +36,8 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     
     grub_conf_file = open(grub_conf_path, "r")
     grub_conf = grub_conf_file.read()
+    grub_conf_file.close()
+
     match = re.search( "set default=\\\"([0-9]*)\\\"", grub_conf , re.MULTILINE )
     if match == None:
         logging.error("!!!ERROR: Couldn't parse grub config! ")
@@ -43,7 +45,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
         raise LookupError()
 
     default = int(match.group(1))
-    matches = re.findall("menuentry[^{]*{[^}]*}"  , grub_conf , re.MULTILINE)
+    matches = re.findall("menuentry\s[^{]*{[^}]*}"  , grub_conf , re.MULTILINE)
     
     original_menuentry = str(matches[default])
     original_menu_contents = original_menuentry[original_menuentry.find("{")+1:]
@@ -81,13 +83,13 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
 
     entry_contents = entry_contents + initrd_row + "\n"
 
-    replaced_grub = re.sub("(menuentry[^{]*){[^}]*}" , "\g<1>{\n"+entry_contents+"}" , grub_conf , re.MULTILINE)
+    replaced_grub = re.sub("(menuentry\s[^{]*){[^}]*}" , "\g<1>{\n"+entry_contents+"}" , grub_conf , re.MULTILINE)
     logging.info("grub.conf processed")
     logging.debug("grub conf contains: " + replaced_grub)
     if replaced_grub == grub_conf:
         logging.warn("! No data was replaced in the config. Boot failures are highly possible")
 
-    grub_conf_file.close()
+    
     grub_conf_file = open(grub_conf_path, "w")
     grub_conf_file.write(replaced_grub)
     grub_conf_file.close()
@@ -106,6 +108,7 @@ def InstallGrub(mount_point , partition_dev):
         RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point + "/boot"])
       
         uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
+        uuid = str(uuid).strip()
 
         _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
 

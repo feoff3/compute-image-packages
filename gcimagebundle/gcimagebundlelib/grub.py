@@ -105,7 +105,7 @@ def InstallGrub(mount_point , partition_dev):
         
         # install grub2 there
         # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
-        RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point + "/boot"])
+        RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point ])
       
         uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
         uuid = str(uuid).strip()

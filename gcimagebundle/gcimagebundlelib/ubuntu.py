@@ -50,5 +50,6 @@ class Ubuntu(linux.LinuxPlatform):
 
   def __init__(self):
     super(Ubuntu, self).__init__()
+    self.linux_family = linux.LinuxPlatform.DebianFamily
     (self.distribution_codename, _, self.distribution,
      self.distribution_version) = Ubuntu.ParseLsbRelease()

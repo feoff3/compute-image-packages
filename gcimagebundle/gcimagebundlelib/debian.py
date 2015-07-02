@@ -34,3 +34,4 @@ class Debian(linux.LinuxPlatform):
 
   def __init__(self):
     super(Debian, self).__init__()
+    self.linux_family = linux.LinuxPlatform.DebianFamily

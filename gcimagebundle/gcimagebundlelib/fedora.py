@@ -52,5 +52,6 @@ class Fedora(linux.LinuxPlatform):
 
   def __init__(self):
     super(Fedora, self).__init__()
+    self.linux_family = linux.LinuxPlatform.RedhatFamily
     (self.distribution_codename, _, self.distribution,
      self.distribution_version) = Fedora.ParseRedhatRelease()

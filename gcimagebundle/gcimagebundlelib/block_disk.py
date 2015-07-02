@@ -145,8 +145,6 @@ class FsRawDisk(fs_copy.FsCopy):
       utils.MakePartitionTable(disk_file_path)
       # Pass 1MB as start to avoid 'Warning: The resulting partition is not
       # properly aligned for best performance.' from parted.
-      
-      # TODO: feoff - here we should add grub loader too.
       partition_start = 1024 * 1024
 
     # Create a new partition starting at partition_start of size
@@ -173,9 +171,10 @@ class FsRawDisk(fs_copy.FsCopy):
         self._ProcessOverwriteList(mount_point)
         self._CleanupNetwork(mount_point)
         self._UpdateFstab(mount_point, uuid)
-        # TODO: add grub here
+        # feoff: set dhcp to eth0
+        self._SetDhcp(mount_point)
+        # feoff: grub
         # should move add_grub to the parm
-        # maybe to move it to utils?
         add_grub = True
         if add_grub:
             from gcimagebundlelib import grub
@@ -208,7 +207,17 @@ class FsRawDisk(fs_copy.FsCopy):
     return (self._fs_size, h.hexdigest())
 
  
-
+  def _SetDhcp(self, mount_point):
+      """Enables dhcp on eth0
+    
+      Args:
+          mount_point: A path to a mounted raw disk.
+      """
+      path = self._platform.GetNetworkSettingsPath()
+      data = self._platform.GetNetworkOptionsString()
+      with open(path , "w") as f:
+          f.write(data) 
+      return
 
   def _CopySourceFiles(self, mount_point):
     """Copies all source files/directories to a mounted raw disk.

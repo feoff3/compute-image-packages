@@ -44,14 +44,19 @@ class LinuxPlatform(os_platform.Platform):
                                preserve_dir=True, preserve_subdir=True),
       exclude_spec.ExcludeSpec('/var/run',
                                preserve_dir=True, preserve_subdir=True)]
+  UnknownFamily = 0
+  DebianFamily = 1
+  RedhatFamily = 2 
 
   def __init__(self):
     """Populate the uname -a information."""
+    self.linux_family = LinuxPlatform.UnknownFamily
     super(LinuxPlatform, self).__init__()
     (self.name, self.hostname, self.release, self.version, self.architecture,
      self.processor) = platform.uname()
     (self.distribution, self.distribution_version,
      self.distribution_codename) = platform.dist()
+     
 
   def GetPlatformDetails(self):
     return ' '.join([self.name, self.hostname, self.release, self.version,
@@ -144,3 +149,39 @@ class LinuxPlatform(os_platform.Platform):
   def GetPreferredFilesystemType(self):
     """Return the optimal filesystem supported for the platform."""
     return 'ext4'
+
+#feoff: added network seetings, they are different for Debian\RHEL distros
+#TODO: make virtual
+  def GetNetworkSettingsPath(self):
+      """Returns path to netowrk config"""
+      if self.linux_family == LinuxPlatform.RedhatFamily:
+          return "/etc/sysconfig/network-scripts/ifcfg-eth0"
+      if self.linux_family == LinuxPlatform.DebianFamily:
+          return "/etc/network/interfaces"
+      raise NotImplementedError
+
+  def GetNetworkOptionsString(self , static_ip = None, gateway = None , mask = None):
+      """Returns data to be placed in network config file
+
+      if static_ip then dhcp enabled config version returned
+      """
+      if self.linux_family == LinuxPlatform.RedhatFamily:
+          retval = "DEVICE=eth0\n"
+          if static_ip:
+              retval = retval + "BOOTPROTO=static\nDHCPCLASS=\nIPADDR="+static_ip+"\nNETMASK=mask\nGATEWAY="+gateway+"\n" # not sure of gateway
+          else:
+              retval = retval + "BOOTPROTO=dhcp\n"
+          retval = retval + "ONBOOT=yes\n"
+          return retval
+      if self.linux_family == LinuxPlatform.DebianFamily:
+          if static_ip:
+              retval = "iface eth0 inet static\
+                \n\taddress" + static_ip + \
+                "\n\tnetmask" + mask + \
+                "\n\tgateway" + gateway
+              return retval
+            #"\n\tnetwork" 192.168.1.0 not sure what to add, can be deduced from netmask
+            # broadcast 192.168.1.255 - not sure what to add , can be deduced from netmask
+          else:
+              return "auto eth0\niface eth0 inet dhcp\n"
+      raise NotImplementedError

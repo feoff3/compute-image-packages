@@ -34,6 +34,7 @@ class RHEL(linux.LinuxPlatform):
 
   def __init__(self):
     super(RHEL, self).__init__()
+    self.linux_family = linux.LinuxPlatform.RedhatFamily
 
   def GetPreferredFilesystemType(self):
     (_,version,_) = platform.linux_distribution()

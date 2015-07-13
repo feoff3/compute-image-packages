@@ -35,8 +35,8 @@ class TarAndGzipFileException(Exception):
 
 class LoadDiskImage(object):
   """Loads raw disk image using kpartx."""
-
-  def __init__(self, file_path, virtual_image = True):
+ 
+  def __init__(self, file_path):
     """Initializes LoadDiskImage object.
 
     Args:
@@ -48,24 +48,12 @@ class LoadDiskImage(object):
       A list of devices for every partition found in an image.
     """
     self._file_path = file_path
-    self._virtual_image = virtual_image
-    self._ndb_path = "/dev/nbd0"
 
   def __enter__(self):
     """Map disk image as a device."""
     SyncFileSystem()
 
     mountpath = self._file_path
-
-    # VFedorov: we shall use non-kpartx implimentation when image is not raw
-    #TODO: move this class to Nbd override 
-    if self._virtual_image:
-        mountpath =  self._ndb_path
-        modprobe_cmd = ['modprobe', 'nbd']
-        logging.debug("Starting qemu block device emulation")
-        output = RunCommand(modprobe_cmd)
-        nbd_cmd = ["qemu-nbd", "-c" , mountpath, self._file_path]
-        output = RunCommand(nbd_cmd)
 
     kpartx_cmd = ['kpartx', '-a', '-v', '-s', mountpath]
     output = RunCommand(kpartx_cmd)
@@ -91,13 +79,12 @@ class LoadDiskImage(object):
 
     #TODO: should check if kpartx was done previously
     #may fail on the faulty path
-    kpartx_cmd = ['kpartx', '-d', '-v', '-s', self._file_path]
-    RunCommand(kpartx_cmd)
-
-    if self._virtual_image:
-        mountpath =  self._ndb_path
-        nbd_cmd = ["qemu-nbd", "-d" , mountpath]
-        output = RunCommand(nbd_cmd)
+    try:
+        kpartx_cmd = ['kpartx', '-d', '-v', '-s', self._file_path]
+        RunCommand(kpartx_cmd)
+    except Exception as e:
+        logging.error("kpartx failed to release resources")
+        raise e
 
 
 class MountFileSystem(object):

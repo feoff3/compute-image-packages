@@ -187,3 +187,6 @@ class LinuxPlatform(os_platform.Platform):
           else:
               return "auto eth0\niface eth0 inet dhcp\n"
       raise NotImplementedError
+
+  def GetLinuxFamily(self):
+      return self.linux_family

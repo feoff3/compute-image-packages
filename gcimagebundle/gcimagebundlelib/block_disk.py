@@ -138,6 +138,8 @@ class FsRawDisk(fs_copy.FsCopy):
       # the disk before the first partition in case there is an MBR present.
       partition_start, uuid = self._InitializeDiskFileFromDevice(disk_file_path)
     else:
+      #feoff: our code goes this way
+
       # User didn't specify a disk device. Initialize a device with a simple
       # partition table.
       self._ResizeFile(disk_file_path, self._fs_size)

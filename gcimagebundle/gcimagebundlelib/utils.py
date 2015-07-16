@@ -48,6 +48,7 @@ class LoadDiskImage(object):
       A list of devices for every partition found in an image.
     """
     self._file_path = file_path
+    self._loop_dev = "/dev/loop3"
 
   def __enter__(self):
     """Map disk image as a device."""
@@ -62,7 +63,10 @@ class LoadDiskImage(object):
       split_line = line.split()
       if (len(split_line) > 2 and split_line[0] == 'add'
           and split_line[1] == 'map'):
-        devs.append('/dev/mapper/' + split_line[2])
+          #feoff: we add an extra loopdev here - sometimes grub won't install on /dev/mapper-like links for the uncertain reason 
+          loopdev = self._loop_dev
+          RunCommand(["losetup" , loopdev , '/dev/mapper/' + split_line[2]])
+          devs.append(loopdev)
     time.sleep(2)
     return devs
 
@@ -76,6 +80,8 @@ class LoadDiskImage(object):
     """
     SyncFileSystem()
     time.sleep(2)
+
+    RunCommand(["losetup" , '-d' , self._loop_dev ])
 
     kpartx_cmd = ['kpartx', '-d', '-v', '-s', self._file_path]
     RunCommand(kpartx_cmd)

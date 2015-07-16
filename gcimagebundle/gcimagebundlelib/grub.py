@@ -102,32 +102,34 @@ def InstallGrub(mount_point , partition_dev):
     if str(partition_path).endswith("p1"):
         diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
         diskpath = "/dev/" + diskpath
-        
-        devmap = mount_point + "/device.map"
-        with open(devmap , "w") as devicemap:
-            devicemap.write("(hd0) " + diskpath)
-            devicemap.write("\n(hd0,1) " + partition_dev)
-
-        # install grub2 there
-        # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
-        RunCommand(["grub-install", "--no-floppy" , str(diskpath), "--root-directory=" + mount_point, "--grub-mkdevicemap="+devmap , "--modules=\"biosdisk part_msdos ext2 configfile normal multiboot xfs\"" ])
+    elif "/dev/loop" in str(partition_path):
+        #in case we used extra loop for mapping the partition
+        losetup_out = RunCommand(["losetup" , partition_path])
+        partition_path = losetup_out[losetup_out.find('(')+1:losetup_out.find(')')-1]
+        diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
+        diskpath = "/dev/" + diskpath
+    else:
+        logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
+        raise OSError("Cannot find partition to install GRUB")
+    # install grub2 there
+    # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
+    RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point ])
       
-        uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
-        uuid = str(uuid).strip()
+    uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
+    uuid = str(uuid).strip()
 
-        _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
+    _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
 
-        #TODO: generate config
-        #TODO: 1. make grub template
-        #TODO: 2. set linux boot options there
-        #TODO: 3. find initrd to match linux
-        #TODO: 4. drive name (should be /dev/sda1 in most cases, but should be parm-able)
+    #TODO: generate config
+    #TODO: 1. make grub template
+    #TODO: 2. set linux boot options there
+    #TODO: 3. find initrd to match linux
+    #TODO: 4. drive name (should be /dev/sda1 in most cases, but should be parm-able)
 
-       # RunCommand(["grub-mkconfig",  "-o" , mount_point+"/boot/grub/grub.cfg"])
-        return
+    # RunCommand(["grub-mkconfig",  "-o" , mount_point+"/boot/grub/grub.cfg"])
+    return
 
-    logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
-    raise OSError("Cannot find partition to install GRUB")
+   
 
 
 

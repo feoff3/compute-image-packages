@@ -77,18 +77,11 @@ class LoadDiskImage(object):
     SyncFileSystem()
     time.sleep(2)
 
-    #TODO: should check if kpartx was done previously
-    #may fail on the faulty path
-    try:
-        kpartx_cmd = ['kpartx', '-d', '-v', '-s', self._file_path]
-        RunCommand(kpartx_cmd)
-    except Exception as e:
-        logging.error("kpartx failed to release resources")
+    kpartx_cmd = ['kpartx', '-d', '-v', '-s', self._file_path]
+    RunCommand(kpartx_cmd)
+    
 
-    if self._virtual_image:
-        mountpath =  self._ndb_path
-        nbd_cmd = ["qemu-nbd", "-d" , mountpath]
-        output = RunCommand(nbd_cmd)
+  
 
 
 class MountFileSystem(object):

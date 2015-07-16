@@ -65,7 +65,7 @@ class LoadDiskImage(object):
           and split_line[1] == 'map'):
           #feoff: we add an extra loopdev here - sometimes grub won't install on /dev/mapper-like links for the uncertain reason 
           self._loop_dev = RunCommand(["losetup" , '--show', '--find' , '/dev/mapper/' + split_line[2]])
-          devs.append(loopdev)
+          devs.append(self._loop_dev)
     time.sleep(2)
     return devs
 

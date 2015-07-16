@@ -84,7 +84,11 @@ class LoadDiskImage(object):
         RunCommand(kpartx_cmd)
     except Exception as e:
         logging.error("kpartx failed to release resources")
-        raise e
+
+    if self._virtual_image:
+        mountpath =  self._ndb_path
+        nbd_cmd = ["qemu-nbd", "-d" , mountpath]
+        output = RunCommand(nbd_cmd)
 
 
 class MountFileSystem(object):

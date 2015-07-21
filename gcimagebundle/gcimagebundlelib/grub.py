@@ -53,11 +53,9 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     # Default opts
     defgrubparms = "\t recordfail\n\
     \t insmod ext2\n\
-    \t insmod ext3\n\
     \t insmod xfs\n\
     \t insmod gzio\n\
-    \t insmod part_msdos\n\
-    \t set root='(hd0,1)'\n"
+    \t insmod part_msdos\n"
     searchuuid = "\t search --no-floppy --fs-uuid --set " + partition_uuid + "\n"
 
     entry_contents = defgrubparms + searchuuid
@@ -82,6 +80,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     initrd_row = matches[0]
 
     entry_contents = entry_contents + initrd_row + "\n"
+    entry_contents = entry_contents + "boot\n"
 
     replaced_grub = re.sub("(menuentry\s[^{]*){[^}]*}" , "\g<1>{\n"+entry_contents+"}" , grub_conf , re.MULTILINE)
     logging.info("grub.conf processed")

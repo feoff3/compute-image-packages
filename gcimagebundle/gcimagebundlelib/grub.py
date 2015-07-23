@@ -68,6 +68,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
         raise LookupError()
     linux_row = matches[0]
     linux_row = re.sub("root=([^\s]*)" , "root=UUID="+partition_uuid , linux_row)
+    linux_row.replace("console=ttyS0" , "") #switch serial console off
 
     entry_contents = entry_contents + linux_row + "\n"
     

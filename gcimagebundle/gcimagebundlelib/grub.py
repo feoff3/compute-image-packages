@@ -100,11 +100,14 @@ def InstallGrub(mount_point , partition_dev):
     partition_path = partition_dev
     logging.debug("The partition is " + partition_path)
     if "/dev/loop" in str(partition_path) and len(str(partition_path)) == len("/dev/loop") + 1: # to distinguish /dev/loop1p1 from /dev/loop1
-        #in case we used extra loop for mapping the partition
+        #in case we use extra loop for mapping the partition
         losetup_out = RunCommand(["losetup" , partition_path])
+        #we deduce the disk path
+        # sometimes it returns /dev/mapper/loop1p1 , sometimes /dev/dm-0
         partition_path = losetup_out[losetup_out.find('(')+1:losetup_out.find(')')]
         diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
-        diskpath = "/dev/" + diskpath
+        if not ("/dev/" in diskpath):
+            diskpath = "/dev/" + diskpath
     elif str(partition_path).endswith("p1"):
         diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
         diskpath = "/dev/" + diskpath

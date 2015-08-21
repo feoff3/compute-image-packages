@@ -69,7 +69,7 @@ class LoadDiskImage(object):
           # try to do it without loop dev
           devs.append('/dev/mapper/' + split_line[2])
           self._loop_dev = ""
-          devs.append(self._loop_dev)
+          #devs.append(self._loop_dev)
     time.sleep(2)
     return devs
 

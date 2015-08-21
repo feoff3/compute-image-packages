@@ -64,8 +64,11 @@ class LoadDiskImage(object):
       if (len(split_line) > 2 and split_line[0] == 'add'
           and split_line[1] == 'map'):
           #feoff: we add an extra loopdev here - sometimes grub won't install on /dev/mapper-like links for the uncertain reason 
-          self._loop_dev = RunCommand(["losetup" , '--show', '--find' , '/dev/mapper/' + split_line[2]])
-          self._loop_dev = str(self._loop_dev).strip()
+          #self._loop_dev = RunCommand(["losetup" , '--show', '--find' , '/dev/mapper/' + split_line[2]])
+          #self._loop_dev = str(self._loop_dev).strip()
+          # try to do it without loop dev
+          devs.append('/dev/mapper/' + split_line[2])
+          self._loop_dev = ""
           devs.append(self._loop_dev)
     time.sleep(2)
     return devs
@@ -81,7 +84,8 @@ class LoadDiskImage(object):
     SyncFileSystem()
     time.sleep(2)
 
-    RunCommand(["losetup" , '-d' , self._loop_dev ])
+    if self._loop_dev:
+        RunCommand(["losetup" , '-d' , self._loop_dev ])
 
     time.sleep(2)
 

@@ -120,8 +120,8 @@ def InstallGrub(mount_point , partition_dev):
         f.write("(hd0)\t"+diskpath+"\n(hd0,1)\t"+partition_path+"\n")
     # install grub2 there
     # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
-    RunCommand(["grub-install" , str(diskpath), "--root-directory=" + mount_point , "--recheck" , "--grub-mkdevicemap="+devmap])
-      
+    RunCommand(["grub-install" , str(diskpath), "--root-directory=" + mount_point , "--recheck" , "--grub-mkdevicemap="+devmap , "--skip-fs-probe" , "--verbose"])
+          
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()
 

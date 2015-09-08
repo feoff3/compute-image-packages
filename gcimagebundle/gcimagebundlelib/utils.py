@@ -480,7 +480,7 @@ def IsRunningOnGCE():
     Http().GetMetadata('instance/id', timeout=1)
     return True
   except urllib2.HTTPError as e:
-    logging.warning('HTTP error: %s (http status code=%s)' % (e.reason, e.code))
+    logging.warning('http status code=%s' % e.code)
   except urllib2.URLError as e:
     logging.warning('Cannot reach metadata server: %s' % e.reason)
 

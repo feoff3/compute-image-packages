@@ -116,7 +116,7 @@ def InstallGrub(mount_point , partition_dev):
         raise OSError("Cannot find partition to install GRUB")
     # install grub2 there
     # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
-    RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point ])
+    RunCommand(["grub-install", str(diskpath), "--root-directory=" + mount_point , "--recheck"])
       
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()

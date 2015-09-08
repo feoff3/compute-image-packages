@@ -223,7 +223,7 @@ def MakeFileSystem(dev_path, fs_type, uuid=None):
   return uuid
 
 
-def Rsync(src, dest, exclude_file, ignore_hard_links, recursive, xattrs, verbose=True):
+def Rsync(src, dest, exclude_file, ignore_hard_links, recursive, xattrs, verbose=False):
   """Copy files from specified directory using rsync.
 
   Args:

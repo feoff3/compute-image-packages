@@ -115,7 +115,7 @@ def InstallGrub(mount_point , partition_dev):
         logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
         raise OSError("Cannot find partition to install GRUB")
     
-    devmap = "mount_point+/device.map"
+    devmap = mount_point+"/device.map"
     with open(devmap , "w") as f:
         f.write("(hd0)\t"+diskpath+"\n(hd0,1)\t"+partition_path)
     # install grub2 there

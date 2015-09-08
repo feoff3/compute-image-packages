@@ -98,7 +98,7 @@ def InstallGrub(mount_point , partition_dev):
     """Adds Grub boot loader to the disk and points it to boot from the partition"""
     logging.info(">>> Installing grub")
     partition_path = partition_dev
-    logging.debug("The partition is " + partition_path)
+    logging.info("The partition is " + partition_path)
     if "/dev/loop" in str(partition_path) and len(str(partition_path)) == len("/dev/loop") + 1: # to distinguish /dev/loop1p1 from /dev/loop1
         #in case we use extra loop for mapping the partition
         losetup_out = RunCommand(["losetup" , partition_path])

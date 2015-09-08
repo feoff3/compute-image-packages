@@ -223,7 +223,7 @@ def MakeFileSystem(dev_path, fs_type, uuid=None):
   return uuid
 
 
-def Rsync(src, dest, exclude_file, ignore_hard_links, recursive, xattrs):
+def Rsync(src, dest, exclude_file, ignore_hard_links, recursive, xattrs, verbose=True):
   """Copy files from specified directory using rsync.
 
   Args:
@@ -235,6 +235,7 @@ def Rsync(src, dest, exclude_file, ignore_hard_links, recursive, xattrs):
       False, hard link are recreated in dest.
     recursive: Specifies if directories are copied recursively or not.
     xattrs: Specifies if extended attributes are preserved or not.
+    verbose: if true, verboses the output and progress while rsync works
   """
   rsync_cmd = ['rsync', '--times', '--perms', '--owner', '--group', '--links',
                '--devices', '--acls', '--sparse']
@@ -248,6 +249,8 @@ def Rsync(src, dest, exclude_file, ignore_hard_links, recursive, xattrs):
     rsync_cmd.append('--xattrs')
   if exclude_file:
     rsync_cmd.append('--exclude-from=' + exclude_file)
+  if verbose:
+    rsync_cmd.extend(['--stats', '--progress' , '-v'])
   rsync_cmd.extend([src, dest])
 
   logging.debug('Calling: %s', repr(rsync_cmd))
@@ -257,7 +260,7 @@ def Rsync(src, dest, exclude_file, ignore_hard_links, recursive, xattrs):
       for line in excludes:
         logging.debug('  %s', line.rstrip())
 
-  RunCommand(rsync_cmd)
+  RunCommand(rsync_cmd , poll_stdout=verbose)
 
 
 def GetUUID(partition_path):
@@ -369,12 +372,13 @@ def GetDiskSize(disk_file):
   return int(output) * 1024
 
 
-def RunCommand(command, input_str=None):
+def RunCommand(command, input_str=None , poll_stdout=False):
   """Runs the command and returns the output printed on stdout.
 
   Args:
     command: The command to run.
     input_str: The input to pass to subprocess via stdin.
+    poll_stdout: If set to True, polls stdout and outputs to the log on info level while subprocess is running
 
   Returns:
     The stdout from running the command.
@@ -385,6 +389,9 @@ def RunCommand(command, input_str=None):
   logging.debug('running %s with input=%s', command, input_str)
   p = subprocess.Popen(command, stdin=subprocess.PIPE,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  if poll_stdout:
+    while p.poll() == False:
+          logging.info("%s" , p.stdout.read())
   cmd_output = p.communicate(input_str)
   logging.debug('stdout %s', cmd_output[0])
   logging.debug('stderr %s', cmd_output[1])

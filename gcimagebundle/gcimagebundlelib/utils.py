@@ -65,7 +65,7 @@ class LoadDiskImage(object):
         raise OSError("Unknown loop device is built")
     self._base_loop = str(output).strip()
     # create a loop for partition
-    losetup_cmd = ['losetup' , '--offset' , offset , "--show" , "-f" , self._base_loop]
+    losetup_cmd = ['losetup' , '--offset' , str(offset) , "--show" , "-f" , self._base_loop]
     output = RunCommand(losetup_cmd)
     if not "/dev/loop" in output:
         raise OSError("Unknown loop device is built")

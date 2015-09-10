@@ -150,9 +150,9 @@ class FsRawDisk(fs_copy.FsCopy):
       partition_start = 1024 * 1024
 
     # Create a new partition starting at partition_start of size
-    # self._fs_size - partition_start
+    # self._fs_size - partition_start. 
     utils.MakePartition(disk_file_path, 'primary', 'ext2', partition_start,
-                        self._fs_size - partition_start)
+                        self._fs_size) # feoff: THE LAST PARM IS THE LAST SECTOR! , not size!
     with utils.LoadDiskImage(disk_file_path) as devices:
       # For now we only support disks with a single partition.
       if len(devices) != 1:

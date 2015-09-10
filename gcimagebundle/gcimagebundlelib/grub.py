@@ -103,9 +103,8 @@ def InstallGrub(mount_point , partition_dev):
         #in case we use extra loop for mapping the partition
         losetup_out = RunCommand(["losetup" , partition_path])
         #we deduce the disk path
-        # sometimes it returns /dev/mapper/loop1p1 , sometimes /dev/dm-0
         partition_path = losetup_out[losetup_out.find('(')+1:losetup_out.find(')')]
-        diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
+        diskpath = str(partition_path).replace("/dev/mapper/" , "")
         if not ("/dev/" in diskpath):
             diskpath = "/dev/" + diskpath
     elif str(partition_path).endswith("p1"):
@@ -115,12 +114,9 @@ def InstallGrub(mount_point , partition_dev):
         logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
         raise OSError("Cannot find partition to install GRUB")
     
-    devmap = mount_point+"/device.map"
-    with open(devmap , "w") as f:
-        f.write("(hd0)\t"+diskpath+"\n(hd0,1)\t"+partition_path+"\n")
     # install grub2 there
     # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
-    RunCommand(["grub-install" , str(diskpath), "--root-directory=" + mount_point , "--recheck" , "--grub-mkdevicemap="+devmap , "--skip-fs-probe" , "--verbose"])
+    RunCommand(["grub-install" , str(diskpath), "--root-directory=" + mount_point , "--recheck" , "--verbose"])
           
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()

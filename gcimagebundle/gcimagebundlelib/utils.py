@@ -36,7 +36,7 @@ class TarAndGzipFileException(Exception):
 class LoadDiskImage(object):
   """Loads raw disk image using kpartx."""
  
-  def __init__(self, file_path):
+  def __init__(self, file_path, part_offset = 1024*1024):
     """Initializes LoadDiskImage object.
 
     Args:
@@ -48,29 +48,46 @@ class LoadDiskImage(object):
       A list of devices for every partition found in an image.
     """
     self._file_path = file_path
-    self._loop_dev = "/dev/loop0"
+    self._part_offset = part_offset
+    self._base_loop = "";
+    self._part_loop = "";
 
   def __enter__(self):
     """Map disk image as a device."""
     SyncFileSystem()
 
     mountpath = self._file_path
+    offset = self._part_offset
+    #create base loop for the whole file
+    losetup_cmd = ['losetup' , "--show" , "-f" , self._file_path]
+    output = RunCommand(losetup_cmd)
+    if not "/dev/loop" in output:
+        raise OSError("Unknown loop device is built")
+    self._base_loop = str(output).strip()
+    # create a loop for partition
+    losetup_cmd = ['losetup' , '--offset' , offset , "--show" , "-f" , self._base_loop]
+    output = RunCommand(losetup_cmd)
+    if not "/dev/loop" in output:
+        raise OSError("Unknown loop device is built")
+    self._part_loop = str(output).strip()
 
-    kpartx_cmd = ['kpartx', '-a', '-v', '-s', mountpath]
-    output = RunCommand(kpartx_cmd)
-    devs = []
-    for line in output.splitlines():
-      split_line = line.split()
-      if (len(split_line) > 2 and split_line[0] == 'add'
-          and split_line[1] == 'map'):
+    #feoff: !kpartx is shit, grub doesn't work with it at all
+    #kpartx_cmd = ['kpartx', '-a', '-v', '-s', mountpath]
+    #output = RunCommand(kpartx_cmd)
+    # 
+    devs = [self._part_loop]
+    #for line in output.splitlines():
+    #  split_line = line.split()
+    #  if (len(split_line) > 2 and split_line[0] == 'add'
+    #      and split_line[1] == 'map'):
           #feoff: we add an extra loopdev here - sometimes grub won't install on /dev/mapper-like links for the uncertain reason 
           #self._loop_dev = RunCommand(["losetup" , '--show', '--find' , '/dev/mapper/' + split_line[2]])
           #self._loop_dev = str(self._loop_dev).strip()
           # try to do it without loop dev
-          devs.append('/dev/mapper/' + split_line[2])
-          self._loop_dev = ""
+    #      devs.append('/dev/mapper/' + split_line[2])
+    #      self._loop_dev = ""
           #devs.append(self._loop_dev)
-    time.sleep(2)
+    #time.sleep(2)
     return devs
 
   def __exit__(self, unused_exc_type, unused_exc_value, unused_exc_tb):
@@ -84,13 +101,13 @@ class LoadDiskImage(object):
     SyncFileSystem()
     time.sleep(2)
 
-    if self._loop_dev:
-        RunCommand(["losetup" , '-d' , self._loop_dev ])
+    if self._part_loop:
+        RunCommand(["losetup" , '-d' , self._part_loop ])
 
     time.sleep(2)
 
-    kpartx_cmd = ['kpartx', '-d', '-v', '-s', self._file_path]
-    RunCommand(kpartx_cmd)
+    if self._base_loop:
+        RunCommand(["losetup" , '-d' , self._base_loop ])
     
 
   

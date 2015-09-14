@@ -138,7 +138,8 @@ class LinuxPlatform(os_platform.Platform):
     # /selinux is deprecated in favor of /sys/fs/selinux, but preserve it on
     # those OSes where it's present.
     if os.path.isdir('/selinux'):
-      os.mkdir(tmpdir + 'selinux', 0755)
+      if not (os.path.exists(tmpdir + 'selinux')): 
+        os.mkdir(tmpdir + 'selinux', 0755)
       retval.append((tmpdir + 'selinux', 'selinux'))
     return retval
 

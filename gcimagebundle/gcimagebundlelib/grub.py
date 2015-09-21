@@ -114,9 +114,12 @@ def InstallGrub(mount_point , partition_dev):
         logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
         raise OSError("Cannot find partition to install GRUB")
     
+    devmap = mount_point+"/boot/device.map"
+    with open(devmap,"w") as f:
+        f.write("(hd0)   "+str(diskpath)+"\n(hd0,1) "+partition_dev)
     # install grub2 there
     # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
-    RunCommand(["grub-install" , str(diskpath), "--root-directory=" + mount_point])
+    RunCommand(["grub-install" , str(diskpath), "--root-directory=" + mount_point , "--grub-mkdevicemap="+devmap])
           
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()

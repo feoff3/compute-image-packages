@@ -128,7 +128,7 @@ def InstallGrub(mount_point , partition_dev):
     version = version[len("(GRUB) "):]
   #  if int(version[0]) >= 2:
   #   logging.info("Using version 2.0+")
-    RunCommand(["grub-install" , "--verbose", "--boot-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio" , str(diskpath)])
+    RunCommand(["grub-install" , "--verbose", "--boot-directory=" + mount_point+"/boot" , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
   #  else:
   #      logging.info("Using version 1.9")
   #      RunCommand(["grub-install" , "--boot-directory=" + mount_point , "--grub-mkdevicemap="+devmap , str(diskpath)])

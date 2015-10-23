@@ -129,7 +129,10 @@ def InstallGrub(mount_point , partition_dev):
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()
 
-    _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
+    if os.path.exists(mount_point + "/boot/grub2/grub.cfg"):
+        _patchGrubConfig(mount_point + "/boot/grub2/grub.cfg" , uuid)
+    else:
+        _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
 
     #TODO: generate config
     #TODO: 1. make grub template

@@ -119,12 +119,19 @@ def InstallGrub(mount_point , partition_dev):
         f.write("(hd0)   "+str(diskpath)+"\n(hd0,1) "+partition_dev)
     # install grub2 there
     # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
-    version = RunCommand(["grub2-install" , "--version"])
+    grub_command = "grub2-install"
+    try:
+        version = RunCommand([grub_command , "--version"])
+    except OSError as e:
+        #then there is no such command, try other one
+        grub_command = "grub-install"
+        version = RunCommand([grub_command , "--version"])
+
     version = version.strip()
     logging.info(">>> Grub version " + version)
 
     
-    RunCommand(["grub2-install" , "--boot-directory=" + mount_point+"/boot" , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])  
+    RunCommand([grub_command , "--boot-directory=" + mount_point+"/boot" , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])  
           
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()

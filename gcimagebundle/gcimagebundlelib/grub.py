@@ -38,13 +38,14 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     grub_conf = grub_conf_file.read()
     grub_conf_file.close()
 
+    # seek for default entry
     match = re.search( "set default=\\\"([0-9]*)\\\"", grub_conf , re.MULTILINE )
+    default = 0
     if match == None:
-        logging.error("!!!ERROR: Couldn't parse grub config! ")
-        logging.error("Config " + grub_conf)
-        raise LookupError()
+        logging.info("Found no default entry in grub config")
+    else:
+        default = int(match.group(1))
 
-    default = int(match.group(1))
     matches = re.findall("menuentry\s[^{]*{[^}]*}"  , grub_conf , re.MULTILINE)
     
     original_menuentry = str(matches[default])

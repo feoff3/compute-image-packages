@@ -169,7 +169,7 @@ class LinuxPlatform(os_platform.Platform):
       if self.linux_family == LinuxPlatform.RedhatFamily:
           retval = "DEVICE=eth0\n"
           if static_ip:
-              retval = retval + "BOOTPROTO=static\nDHCPCLASS=\nIPADDR="+static_ip+"\nNETMASK=mask\nGATEWAY="+gateway+"\n" # not sure of gateway
+              retval = retval + "BOOTPROTO=static\nDHCPCLASS=\nIPADDR="+static_ip+"\nNETMASK="+mask+"\nGATEWAY="+gateway+"\n" # not sure of gateway
           else:
               retval = retval + "BOOTPROTO=dhcp\n"
           retval = retval + "ONBOOT=yes\n"

@@ -119,7 +119,7 @@ def InstallGrub(mount_point , partition_dev):
         f.write("(hd0)   "+str(diskpath)+"\n(hd0,1) "+partition_dev)
     # install grub2 there
     # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
-    version = RunCommand(["grub-install" , "--version"])
+    version = RunCommand(["grub2-install" , "--version"])
     version = version.strip()
     logging.info(">>> Grub version " + version)
 

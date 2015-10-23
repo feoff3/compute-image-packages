@@ -62,7 +62,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     entry_contents = defgrubparms + searchuuid
 
     # we use the same linux kernel and parms just switching its root
-    matches = re.findall("\slinux\s.*$" , original_menu_contents, re.MULTILINE)
+    matches = re.findall("\slinux(16)?\s.*$" , original_menu_contents, re.MULTILINE)
     if len(matches) == 0:
         logging.error("!!!ERROR: Couldn't parse grub config menu entry! No linux entry found! ")
         logging.error("Config " + original_menuentry)
@@ -74,7 +74,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     entry_contents = entry_contents + linux_row + "\n"
     
     #then we add initrd entry as-is
-    matches = re.findall("\sinitrd\s.*$" , original_menu_contents, re.MULTILINE)
+    matches = re.findall("\sinitrd(16)?\s.*$" , original_menu_contents, re.MULTILINE)
     if len(matches) == 0:
         logging.error("!!!ERROR: Couldn't parse grub config menu entry! No initrd entry found")
         logging.error("Config " + original_menuentry)

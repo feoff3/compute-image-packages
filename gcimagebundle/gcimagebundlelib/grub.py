@@ -123,18 +123,8 @@ def InstallGrub(mount_point , partition_dev):
     version = version.strip()
     logging.info(">>> Grub version " + version)
 
-    #we call grub differently if version >= 2.0 and version < 2.0
-    version = version[version.find("(GRUB) "):]
-    version = version[len("(GRUB) "):]
-  #  if int(version[0]) >= 2:
-  #   logging.info("Using version 2.0+")
-    RunCommand(["grub-install" , "--boot-directory=" + mount_point+"/boot" , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
-  #  else:
-  #      logging.info("Using version 1.9")
-  #      RunCommand(["grub-install" , "--boot-directory=" + mount_point , "--grub-mkdevicemap="+devmap , str(diskpath)])
     
-    # for now < 2.0 doesn't work
-    
+    RunCommand(["grub2-install" , "--boot-directory=" + mount_point+"/boot" , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])  
           
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()

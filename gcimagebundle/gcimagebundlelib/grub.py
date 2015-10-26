@@ -62,7 +62,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     entry_contents = defgrubparms + searchuuid
 
     # we use the same linux kernel and parms just switching its root
-    matches = re.findall("\slinux(16)?\s.*$" , original_menu_contents, re.MULTILINE)
+    matches = re.findall("\slinux\s.*$" , original_menu_contents, re.MULTILINE)
     if len(matches) == 0:
         logging.error("!!!ERROR: Couldn't parse grub config menu entry! No linux entry found! ")
         logging.error("Config " + original_menuentry)
@@ -74,7 +74,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     entry_contents = entry_contents + linux_row + "\n"
     
     #then we add initrd entry as-is
-    matches = re.findall("\sinitrd(16)?\s.*$" , original_menu_contents, re.MULTILINE)
+    matches = re.findall("\sinitrd\s.*$" , original_menu_contents, re.MULTILINE)
     if len(matches) == 0:
         logging.error("!!!ERROR: Couldn't parse grub config menu entry! No initrd entry found")
         logging.error("Config " + original_menuentry)
@@ -97,7 +97,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
 
 def InstallGrub(mount_point , partition_dev):
     """Adds Grub boot loader to the disk and points it to boot from the partition"""
-    logging.info(">>> Installing grub")
+    logging.info(">>> Applying GRUB configuration")
     partition_path = partition_dev
     logging.info("The partition is " + partition_path)
     if "/dev/loop" in str(partition_path) and len(str(partition_path)) == len("/dev/loop") + 1: # to distinguish /dev/loop1p1 from /dev/loop1
@@ -129,7 +129,7 @@ def InstallGrub(mount_point , partition_dev):
         version = RunCommand([grub_command , "--version"])
 
     version = version.strip()
-    logging.info(">>> Grub version " + version)
+    logging.info(">>> Grub version detected: " + version + " (1.9+ is required)")
 
     
     RunCommand([grub_command , "--boot-directory=" + mount_point+"/boot" , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])  

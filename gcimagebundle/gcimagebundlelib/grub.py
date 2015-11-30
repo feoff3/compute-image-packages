@@ -133,7 +133,7 @@ def InstallGrub(mount_point , partition_dev):
     logging.info(">>> Grub version detected: " + version + " (1.9+ is required)")
 
     
-    RunCommand([grub_command , "--boot-directory=" + mount_point+"/boot" , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])  
+    RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])  
           
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()

@@ -163,7 +163,7 @@ def GetMounts(root='/'):
   Returns:
     A list of mount points.
   """
-  output = RunCommand(['/bin/mount', '-l'])
+  output = RunCommand(['mount', '-l'])
   mounts = []
   for line in output.splitlines():
     split_line = line.split()

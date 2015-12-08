@@ -404,8 +404,12 @@ def RunCommand(command, input_str=None , poll_stdout=False):
     subprocess.CalledProcessError: if the command fails.
   """
   logging.debug('running %s with input=%s', command, input_str)
-  p = subprocess.Popen(command, stdin=subprocess.PIPE,
+  try:
+    p = subprocess.Popen(command, stdin=subprocess.PIPE,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  except Exception as e:
+    logging.error("!!!ERROR: Cannot run " + command + " . Please check it installed");
+    raise
   if poll_stdout:
     while p.poll() == False:
           logging.info("%s" , p.stdout.read())

@@ -488,7 +488,7 @@ def IsRunningOnGCE():
     dmidecode_cmd = ['dmidecode', '-s', 'bios-vendor']
     output = RunCommand(dmidecode_cmd)
     return 'Google' in output
-  except subprocess.CalledProcessError:
+  except Exception as e:
     # We fail if dmidecode doesn't exist or we have insufficient privileges
     pass
 
@@ -500,6 +500,9 @@ def IsRunningOnGCE():
     logging.warning('http status code=%s' % e.code)
   except urllib2.URLError as e:
     logging.warning('Cannot reach metadata server: %s' % e.reason)
+  except Exception as e:
+    logging.warning('Cannot reach metadata server ' + str(e))
+    pass
 
   return False
 

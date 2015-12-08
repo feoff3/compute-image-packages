@@ -408,7 +408,7 @@ def RunCommand(command, input_str=None , poll_stdout=False):
     p = subprocess.Popen(command, stdin=subprocess.PIPE,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   except Exception as e:
-    logging.error("!!!ERROR: Cannot run " + command + " . Please check it installed");
+    logging.error("!!!ERROR: Cannot run " + str(command) + " . Please check it installed");
     raise
   if poll_stdout:
     while p.poll() == False:

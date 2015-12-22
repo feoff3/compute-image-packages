@@ -69,8 +69,10 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
         logging.error("Config " + original_menuentry)
         raise LookupError()
     linux_row = matches[0]
+    linux_row = re.sub("\s/(?!boot)" , " /boot/" , linux_row) # replace any path to /boot (sometimes grub points to / instead of /boot)
     linux_row = re.sub("root=([^\s]*)" , "root=UUID="+partition_uuid , linux_row)
     linux_row = linux_row.replace("console=ttyS0" , "") #switch serial console off
+    linux_row = linux_row + " fastboot" #turn fastboot to switch of fsck (check of all filesystems. if more than one fs available it may start complaining during the boot)
 
     entry_contents = entry_contents + linux_row + "\n"
     
@@ -81,6 +83,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
         logging.error("Config " + original_menuentry)
         raise LookupError()
     initrd_row = matches[0]
+    initrd_row = re.sub("\s/(?!boot)" , " /boot/" , initrd_row)# replace any path to /boot (sometimes grub points to / instead of /boot)
 
     entry_contents = entry_contents + initrd_row + "\n"
     entry_contents = entry_contents + "boot\n"
@@ -143,13 +146,6 @@ def InstallGrub(mount_point , partition_dev):
     else:
         _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
 
-    #TODO: generate config
-    #TODO: 1. make grub template
-    #TODO: 2. set linux boot options there
-    #TODO: 3. find initrd to match linux
-    #TODO: 4. drive name (should be /dev/sda1 in most cases, but should be parm-able)
-
-    # RunCommand(["grub-mkconfig",  "-o" , mount_point+"/boot/grub/grub.cfg"])
     return
 
    

@@ -28,7 +28,7 @@ import re
   #  set root='(hd0,1)'
   #  search --no-floppy --fs-uuid --set {UUID}
   
-  
+  # Patching Legacy Grub
 def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     """
     Rewrites grub config and points default entry to the partition identified by uuid
@@ -40,17 +40,19 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     grub_conf_file.close()
 
     # seek for default entry
-    match = re.search( "default=\\\"([0-9]*)\\\"", grub_conf , re.MULTILINE )
+    match=re.search("default=[0-9]", grub_conf , re.MULTILINE)
     default = 0
     if match == None:
+        default = 0
         logging.info("Found no default entry in grub config")
     else:
-        default = int(match.group(1))
+        default = match.group(0)
+        default = int(default.split("=")[1])
 
-    matches = re.findall("title\s[^{]*{[^}]*}"  , grub_conf , re.MULTILINE)
+    matches = re.findall("title*\s.*\n.*\n.*\n.*",grub_conf, re.MULTILINE)
     
     original_menuentry = str(matches[default])
-    original_menu_contents = original_menuentry[original_menuentry.find("{")+1:]
+    original_menu_contents = original_menuentry[original_menuentry.find("$")+1:]
 
     # Default opts
     defgrubparms = "\t recordfail\n\
@@ -63,21 +65,22 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     entry_contents = defgrubparms + searchuuid
     # we use the same linux kernel and parms just switching its root
     # regexp supports linux and linux16 dericitives
-    matches = re.findall("\kernel[1-9]*\s.*$" , original_menu_contents, re.MULTILINE)
+    matches = re.findall("kernel*\s.*$" , original_menu_contents, re.MULTILINE)
     if len(matches) == 0:
         logging.error("!!!ERROR: Couldn't parse grub config menu entry! No linux entry found! ")
         logging.error("Config " + original_menuentry)
         raise LookupError()
     linux_row = matches[0]
     linux_row = re.sub("\s/(?!boot)" , " /boot/" , linux_row) # replace any path to /boot (sometimes grub points to / instead of /boot)
-    linux_row = re.sub("root ([^\s]*)" , "uuid "+partition_uuid , linux_row)
+    root_row = re.findall("root *\s.*" , original_menu_contents, re.MULTILINE)[0]
+    root_row = re.sub("root *\s.*" , "root=/dev/disk/by-uuid/"+partition_uuid , root_row)
     linux_row = linux_row + " fastboot" #turn fastboot to switch of fsck (check of all filesystems. if more than one fs available it may start complaining during the boot)
-
+    linux_row = root_row+"\n"+linux_row
     entry_contents = entry_contents + linux_row + "\n"
     
     #then we add initrd entry as-is
-    matches = re.findall("\sinitrd[1-9]*\s.*$" , original_menu_contents, re.MULTILINE)
-    if len(matches) == 0:
+    matches = re.findall("initrd.*$" , original_menu_contents, re.MULTILINE)
+    if matches == None:
         logging.error("!!!ERROR: Couldn't parse grub config menu entry! No initrd entry found")
         logging.error("Config " + original_menuentry)
         raise LookupError()
@@ -199,22 +202,20 @@ def InstallGrub(mount_point , partition_dev):
     except OSError as e:
         #then there is no such command, try other one
         grub_command = "grub-install"
-        version = RunCommand([grub_command , "--version"])
-		logging.info(">>> Using Grub 0.9 installing profile")
-
+    version = RunCommand([grub_command , "--version"])
+    logging.info(">>>> Using Grub 0.9 Installing profile")
     version = version.strip()
     logging.info(">>> Grub version detected: " + version + " (0.9+ is required)")
-    
-    RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])  
-          
+    RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()
-
-    if os.path.exists(mount_point + "/boot/grub2/grub.cfg"):
-        _patchGrubConfig(mount_point + "/boot/grub2/grub.cfg" , uuid)
+    if os.path.exists(mount_point+"/boot/grub/grub.conf"):
+        _patchGrubLegacyConfig(mount_point + "/boot/grub/grub.conf", uuid)
     else:
-        _patchGrubLegacyConfig(mount_point + "/boot/grub/grub.cfg" , uuid ) #/boot/grub/grub.cfg is symlinked to /boot/grub/menu.lst
-
+        if os.path.exists(mount_point + "/boot/grub2/grub.cfg"):
+            _patchGrubConfig(mount_point + "/boot/grub2/grub.cfg" , uuid)
+        else:
+            _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
     return
 
    
@@ -223,4 +224,4 @@ def InstallGrub(mount_point , partition_dev):
 
 #for initial debug
 if __name__ == '__main__':
-    _patchGrubConfig("/grub.conf" , "EDA")
+    _patchGrubLegacyConfig("/boot/grub/grub.conf" , "EDA")

@@ -209,7 +209,7 @@ def InstallGrub(mount_point , partition_dev):
 	legacy = 0
 	if os.path.exists(mount_point+"/boot/grub/grub.conf"):
 		legacy = 1
-		logging.info(">>>> Grub Legacy has been detected"
+		logging.info(">>>> Grub Legacy has been detected")
 	if legacy == 1:
 		RunCommand([grub_command , "--root-directory=" + mount_point , str(diskpath)])
 	else:

@@ -206,13 +206,16 @@ def InstallGrub(mount_point , partition_dev):
     logging.info(">>>> Using Grub 0.9 Installing profile")
     version = version.strip()
     logging.info(">>> Grub version detected: " + version + " (0.9+ is required)")
-	if grub_command == "grub-install":
+	legacy = 0
+	if os.path.exists(mount_point+"/boot/grub/grub.conf"):
+		legacy = 1
+	if legacy == 1:
 		RunCommand([grub_command , "--root-directory=" + mount_point , str(diskpath)])
 	else:
 		RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()
-    if os.path.exists(mount_point+"/boot/grub/grub.conf"):
+    if legacy == 1:
         _patchGrubLegacyConfig(mount_point + "/boot/grub/grub.conf", uuid)
     else:
         if os.path.exists(mount_point + "/boot/grub2/grub.cfg"):

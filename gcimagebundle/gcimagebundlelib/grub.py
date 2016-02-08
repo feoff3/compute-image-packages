@@ -181,16 +181,62 @@ def InstallGrub(mount_point , partition_dev):
         losetup_out = RunCommand(["losetup" , partition_path])
         #we deduce the disk path
         partition_path = losetup_out[losetup_out.find('(')+1:losetup_out.find(')')]
-        diskpath = str(partition_path).replace("/dev/mapper/" , "")
-        if not ("/dev/" in diskpath):
-            diskpath = "/dev/" + diskpath
-    elif str(partition_path).endswith("p1"):
-        diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
-        diskpath = "/dev/" + diskpath
+		deviceSize = RunCommand(["echo ",$string," | cut -f3 -d\ "])
+		RunCommand(["echo 0 "+deviceSize+" linear "+diskpath+" 0 | str(diskpath).replace("/dev/mapper/" , "/dev/")])
+		RunCommand(["kpartx -a "+str(diskpath).replace("/dev/mapper/" , "/dev/")])
+        ##diskpath = str(partition_path).replace("/dev/mapper/" , "")
+        ##if not ("/dev/" in diskpath):
+         ##   diskpath = "/dev/" + diskpath
+    if str(partition_path).endswith("p1"):
+        diskpath = str(partition_path).replace("p1" , "")##.replace("/dev/mapper/" , "")
+        ##diskpath = "/dev/" + diskpath
     else:
         logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
         raise OSError("Cannot find partition to install GRUB")
     
+    devmap = mount_point+"/boot/device.map"
+    with open(devmap,"w") as f:
+        f.write("(hd0)   "+str(diskpath)+"\n(hd0,1) "+str(partition_dev))
+		f.close()
+    # install grub2 there
+    # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
+    grub_command = "grub2-install"
+    try:
+        version = RunCommand([grub_command , "--version"])
+    except OSError as e:
+        #then there is no such command, try other one
+        grub_command = "grub-install"
+    version = RunCommand([grub_command , "--version"])
+    logging.info(">>>> Using Grub 0.9 Installing profile")
+    version = version.strip()
+    logging.info(">>> Grub version detected: " + version + " (0.9+ is required)")
+	legacy = 0
+	if os.path.exists(mount_point+"/boot/grub/grub.conf"):
+		legacy = 1
+		logging.info(">>>> Grub Legacy has been detected"
+	if legacy == 1:
+		RunCommand([grub_command , "--root-directory=" + mount_point , str(diskpath)])
+	else:
+		RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
+    uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
+    uuid = str(uuid).strip()
+    if legacy == 1:
+        _patchGrubLegacyConfig(mount_point + "/boot/grub/grub.conf", uuid)
+    else:
+        if os.path.exists(mount_point + "/boot/grub2/grub.cfg"):
+            _patchGrubConfig(mount_point + "/boot/grub2/grub.cfg" , uuid)
+        else:
+            _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
+    return
+    elif str(partition_path).endswith("p1"):
+        diskpath = str(partition_path).replace("p1" , "").replace("/dev/mapper/" , "")
+        diskpath = "/dev/" + diskpath
+		
+    else:
+        logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
+        raise OSError("Cannot find partition to install GRUB")
+    RunCommand(["echo \(hd0\) $deviceName  \n\(hd0,1\) $mapperName | tee $tempdir/boot/grub/device.map"])
+	
     devmap = mount_point+"/boot/device.map"
     with open(devmap,"w") as f:
         f.write("(hd0)   "+str(diskpath)+"\n(hd0,1) "+partition_dev)
@@ -209,7 +255,7 @@ def InstallGrub(mount_point , partition_dev):
 	legacy = 0
 	if os.path.exists(mount_point+"/boot/grub/grub.conf"):
 		legacy = 1
-		logging.info(">>>> Grub Legacy has been detected"
+		logging.info(">>>> Grub Legacy has been detected"	
 	if legacy == 1:
 		RunCommand([grub_command , "--root-directory=" + mount_point , str(diskpath)])
 	else:

@@ -180,11 +180,11 @@ def InstallGrub(mount_point , partition_dev):
         #in case we use extra loop for mapping the partition
         losetup_out = RunCommand(["losetup" , partition_path])
         #we deduce the disk path
-		partition_path = losetup_out[losetup_out.find('(')+1:losetup_out.find(')')]
-		string = RunCommand(["fdisk -l "+partition_path+" |grep "+partition_path+" | tail -n1 | sed s/\*//"])
-		deviceSize = RunCommand(["echo ",string," | cut -f3 -d\ "])
-		RunCommand(["echo 0 "+deviceSize+" linear "+diskpath+" 0 | str(diskpath).replace("/dev/mapper/" , "/dev/")])
-		RunCommand(["kpartx -a "+str(diskpath).replace("/dev/mapper/" , "/dev/")])
+        partition_path = losetup_out[losetup_out.find('(')+1:losetup_out.find(')')]
+        string = RunCommand(["fdisk -l "+partition_path+" |grep "+partition_path+" | tail -n1 | sed s/\*//"])
+        deviceSize = RunCommand(["echo ",string," | cut -f3 -d\ "])
+        RunCommand(["echo 0 "+deviceSize+" linear "+diskpath+" 0 | str(diskpath).replace("/dev/mapper/" , "/dev/")])
+        RunCommand(["kpartx -a "+str(diskpath).replace("/dev/mapper/" , "/dev/")]) #We're Mostly working with mapper
         ##diskpath = str(partition_path).replace("/dev/mapper/" , "")
         ##if not ("/dev/" in diskpath):
          ##   diskpath = "/dev/" + diskpath
@@ -197,7 +197,7 @@ def InstallGrub(mount_point , partition_dev):
     devmap = mount_point+"/boot/device.map"
     with open(devmap,"w") as f:
         f.write("(hd0)   "+str(diskpath)+"\n(hd0,1) "+str(partition_dev))
-		f.close()
+        f.close()
     # install grub2 there
     # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
     grub_command = "grub2-install"
@@ -228,11 +228,6 @@ def InstallGrub(mount_point , partition_dev):
         else:
             _patchGrubConfig(mount_point + "/boot/grub/grub.cfg" , uuid)
     return
-
-
-   
-
-
 
 #for initial debug
 if __name__ == '__main__':

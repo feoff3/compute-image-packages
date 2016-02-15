@@ -118,8 +118,8 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     else:
         default = int(match.group(1))
 
-    matches = re.findall("menuentry\s[^{]*{[^}]*}"  , grub_conf , re.MULTILINE)
-    
+    matches = re.findall("menuentry\s[^{]*{[^}]*}" , grub_conf, re.MULTILINE)
+
     original_menuentry = str(matches[default])
     original_menu_contents = original_menuentry[original_menuentry.find("{")+1:]
 
@@ -155,7 +155,7 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
         logging.error("Config " + original_menuentry)
         raise LookupError()
     initrd_row = matches[0]
-    initrd_row = re.sub("\s/(?!boot)" , " /boot/" , initrd_row)# replace any path to /boot (sometimes grub points to / instead of /boot)
+    initrd_row = re.sub("\s/(?!boot)", " /boot/", initrd_row)# replace any path to /boot (sometimes grub points to / instead of /boot)
 
     entry_contents = entry_contents + initrd_row + "\n"
     entry_contents = entry_contents + "boot\n"
@@ -194,6 +194,7 @@ def InstallGrub(mount_point , partition_dev):
     devmap = mount_point+"/boot/device.map"
     with open(devmap,"w") as f:
         f.write("(hd0)   "+str(diskpath)+"\n(hd0,1) "+partition_dev)
+        f.close()
     # install grub2 there
     # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
     grub_command = "grub2-install"

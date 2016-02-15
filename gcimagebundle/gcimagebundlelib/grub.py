@@ -188,8 +188,8 @@ def InstallGrub(mount_point, partition_dev):
         if not ("/dev/" in diskpath):
             diskpath = "/dev/" + diskpath
     if str(partition_path).endswith("p1"):
-        diskpath = str(partition_path).replace("p1", "")##.replace("/dev/mapper/", "")
-        ##diskpath = "/dev/" + diskpath
+        diskpath = str(partition_path).replace("p1", "").replace("/dev/mapper/", "")
+        diskpath = "/dev/" + diskpath
     else:
         logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
         raise OSError("Cannot find partition to install GRUB")

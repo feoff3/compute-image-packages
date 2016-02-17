@@ -56,8 +56,8 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     # getting the default entry
     original_menuentry = str(matches[default])
     logging.debug("Found title " + original_menuentry)
-    original_title = original_menuentry.split("\n", 1)[0]
-    original_menu_contents = original_menuentry.split("\n", 1)[1]
+    original_title = original_menuentry[:original_menuentry.find("\n")]
+    original_menu_contents = original_menuentry[original_menuentry.find("\n")+1:]
 
     # we use the same linux kernel and parms just switching its root
     # regexp supports linux and linux16 dericitives
@@ -91,7 +91,7 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     entry_contents = entry_contents + initrd_row + "\n"
     entry_contents = entry_contents + "boot\n"
 
-    replaced_grub = grub_conf.replace(original_title+"\n"+original_menu_contents, "Migrated - "+original_title+"\n"+entry_contents)
+    replaced_grub = grub_conf.replace(original_menuentry, "Migrated - "+original_title+"\n"+entry_contents)
 
     logging.info("grub.conf processed")
     logging.debug("grub conf contains: " + replaced_grub)
@@ -274,6 +274,8 @@ if __name__ == '__main__':
     #    f.write(test_script)
     #os.chmod("/tmp/script.sh", stat.S_IRWXU)
     #RunCommand(["bash" , "/tmp/script.sh"])
-
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    logging.getLogger().addHandler(handler)
     InstallGrub("/tmp/mnt" , "/dev/loop1")
     #_patchGrubLegacyConfig("/boot/grub/grub.conf" , "EDA")

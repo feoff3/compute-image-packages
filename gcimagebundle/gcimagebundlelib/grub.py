@@ -59,7 +59,7 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     original_menu_entry = grub_conf[grub_conf.find(original_title):]
     #find the next title after that
     original_menu_entry = original_menu_entry[:original_menu_entry.find("title" , 6)]
-    original_menu_contents = original_menuentry[original_menuentry.find("\n")+1:]
+    original_menu_contents = original_menu_entry[original_menu_entry.find("\n")+1:]
 
     # we use the same linux kernel and parms just switching its root
     # regexp supports linux and linux16 dericitives
@@ -92,7 +92,7 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     entry_contents = entry_contents + initrd_row + "\n"
     entry_contents = entry_contents + "boot\n"
 
-    replaced_grub = grub_conf.replace(original_menuentry, "Migrated - "+original_title+"\n"+entry_contents)
+    replaced_grub = grub_conf.replace(original_menu_entry, original_title+" Migrated\n"+entry_contents)
 
     logging.info("grub.conf processed")
     logging.debug("grub conf contains: " + replaced_grub)
@@ -230,7 +230,7 @@ def InstallGrub(mount_point , partition_dev):
 
     grub_command = "grub2-install"
     try:
-        version = RunCommand([grub_command , "--version"])
+        version = RunCommand([grub_command , "--version"], ignore_non_existant=True)
     except OSError as e:
         #then there is no such command, try other one
         grub_command = "grub-install"

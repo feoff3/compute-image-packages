@@ -389,14 +389,14 @@ def GetDiskSize(disk_file):
   return int(output) * 1024
 
 
-def RunCommand(command, input_str=None , poll_stdout=False):
+def RunCommand(command, input_str=None , poll_stdout=False, ignore_non_existant=False):
   """Runs the command and returns the output printed on stdout.
 
   Args:
     command: The command to run.
     input_str: The input to pass to subprocess via stdin.
     poll_stdout: If set to True, polls stdout and outputs to the log on info level while subprocess is running
-
+    ignore_non_existant: If set to True, ignores any errors if cannot run the program- just returns None in the output
   Returns:
     The stdout from running the command.
 
@@ -408,6 +408,8 @@ def RunCommand(command, input_str=None , poll_stdout=False):
     p = subprocess.Popen(command, stdin=subprocess.PIPE,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   except Exception as e:
+    if ignore_non_existant:
+        return None
     logging.error("!!!ERROR: Cannot run " + str(command) + " . Please check it installed");
     raise
   if poll_stdout:

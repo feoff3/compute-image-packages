@@ -50,20 +50,15 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
         default = match.group(0)
         default = int(default.split("=")[1])
 
-    matches = re.findall("title*\s.*\n.*\n.*\n.*",grub_conf, re.MULTILINE)
+    matches = re.findall("title(?:(?!\ntitle).)*", grub_conf, re.MULTILINE)
+    #*\s.*\n.*\n.*\n.*",grub_conf, re.MULTILINE)
     
+    # getting the default entry
     original_menuentry = str(matches[default])
-    original_menu_contents = original_menuentry[original_menuentry.find("$")+1:]
+    logging.debug("Found title " + original_menuentry)
+    original_title = original_menuentry.split("\n", 1)[0]
+    original_menu_contents = original_menuentry.split("\n", 1)[1]
 
-    # Default opts
-    defgrubparms = "\t recordfail\n\
-    \t module ext2\n\
-    \t module xfs\n\
-    \t module gzio\n\
-    \t module part_msdos\n"
-    searchuuid = "\t search --no-floppy --fs-uuid --set " + partition_uuid + "\n"
-
-    entry_contents = defgrubparms + searchuuid
     # we use the same linux kernel and parms just switching its root
     # regexp supports linux and linux16 dericitives
     matches = re.findall("kernel*\s.*$" , original_menu_contents, re.MULTILINE)
@@ -73,11 +68,16 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
         raise LookupError()
     linux_row = matches[0]
     linux_row = re.sub("\s/(?!boot)" , " /boot/" , linux_row) # replace any path to /boot (sometimes grub points to / instead of /boot)
-    root_row = re.findall("root *\s.*" , original_menu_contents, re.MULTILINE)[0]
-    root_row = re.sub("root *\s.*" , "root=/dev/disk/by-uuid/"+partition_uuid , root_row)
+    linux_row = re.sub("root=([^\s]*)" , "root=/dev/disk/by-uuid/"+partition_uuid , linux_row)
+    linux_row = linux_row.replace("console=ttyS0" , "") #switch serial console off
     linux_row = linux_row + " fastboot" #turn fastboot to switch of fsck (check of all filesystems. if more than one fs available it may start complaining during the boot)
-    linux_row = root_row+"\n"+linux_row
-    entry_contents = entry_contents + linux_row + "\n"
+    linux_row = linux_row + " fastboot" #turn fastboot to switch of fsck (check of all filesystems. if more than one fs available it may start complaining during the boot)
+    
+    root_row = re.findall("root *\s.*" , original_menu_contents, re.MULTILINE)[0]
+    # see uuid options for various ubuntu distros here https://forums.opensuse.org/showthread.php/414356-Correct-menu-lst
+    root_row = re.sub("root *\s.*" , "uuid " + partition_uuid  , root_row)
+   
+    entry_contents = entry_contents + "\n" + root_row+ "\n"+linux_row + "\n"
     
     #then we add initrd entry as-is
     matches = re.findall("initrd.*$" , original_menu_contents, re.MULTILINE)
@@ -91,7 +91,8 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     entry_contents = entry_contents + initrd_row + "\n"
     entry_contents = entry_contents + "boot\n"
 
-    replaced_grub = re.sub("(menuentry\s[^{]*){[^}]*}" , "\g<1>{\n"+entry_contents+"}" , grub_conf , re.MULTILINE)
+    replaced_grub = grub_conf.replace(original_title+"\n"+original_menu_contents, "Migrated - "+original_title+"\n"+entry_contents)
+
     logging.info("grub.conf processed")
     logging.debug("grub conf contains: " + replaced_grub)
     if replaced_grub == grub_conf:

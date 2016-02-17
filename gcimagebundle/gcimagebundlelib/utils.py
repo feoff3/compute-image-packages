@@ -492,8 +492,11 @@ def IsRunningOnGCE():
   # Try accessing DMI/SMBIOS informations through dmidecode first
   try:
     dmidecode_cmd = ['dmidecode', '-s', 'bios-vendor']
-    output = RunCommand(dmidecode_cmd)
-    return 'Google' in output
+    output = RunCommand(dmidecode_cmd , ignore_non_existant=True)
+    if output:
+        return 'Google' in output
+    else:
+        return False
   except Exception as e:
     # We fail if dmidecode doesn't exist or we have insufficient privileges
     pass

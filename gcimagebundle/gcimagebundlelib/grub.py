@@ -76,7 +76,10 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     
     # see uuid options for various ubuntu distros here https://forums.opensuse.org/showthread.php/414356-Correct-menu-lst
     # TODO: check if it works on non-ubuntu kernels
-    root_row = "uuid " + partition_uuid 
+    if original_menu_contents.find("uuid ") != -1:
+        root_row = "uuid " + partition_uuid 
+    else:
+        root_row = "root (hd0,1)"
 
     entry_contents = "\n" + root_row+ "\n"+linux_row + "\n"
     

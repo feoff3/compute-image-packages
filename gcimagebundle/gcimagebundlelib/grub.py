@@ -19,7 +19,8 @@ from utils import *
 #from gcimagebundlelib.utils import *
 import logging
 import re
-
+import os
+import stat
 
  #recordfail
   #  insmod ext2
@@ -209,12 +210,12 @@ def InstallGrub(mount_point , partition_dev):
     logging.info(">>> Grub version detected: " + version + " (0.9+ is required)")
     legacy = 0
     if os.path.exists(mount_point+"/boot/grub/grub.conf"):
-	legacy = 1
-	logging.info(">>>> Grub Legacy has been detected")
+        legacy = 1
+        logging.info(">>>> Grub Legacy has been detected")
     if legacy == 1:
-	RunCommand([grub_command , "--root-directory=" + mount_point , str(diskpath)])
+        RunCommand([grub_command , "--root-directory=" + mount_point , str(diskpath)])
     else:
-	RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
+        RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()
     if legacy == 1:
@@ -227,9 +228,27 @@ def InstallGrub(mount_point , partition_dev):
     return
 
    
-
-
+test_script = "deviceName=`losetup --show --find /cloudscraper-images/vda.sparsed.raw\
+/dev/loop0`|sed s/\n// #sometimes get really sick\
+deviceName=/dev/loop0\
+string=`fdisk -l $deviceName |grep $deviceName`\
+partitionName=$(echo $string | cut -f8 -d\ )|sed s/\n//\
+deviceSize=$(echo $string | cut -f1 -d\ )|sed s/\n//\
+echo $deviceName $deviceSize\
+echo 0 $deviceSize linear $deviceName 0 | dmsetup create l$(echo $deviceName|sed s/.*l//)\
+kpartx -a $deviceName\
+tempdir='/tmp/mnt'\
+loopId=`echo $deviceName | sed s/.*loop// |sed s/\n//`\
+mapperName=\"/dev/mapper/loop\"$loopId\"p1\"\
+mount $mapperName $tempdir\
+losetup /dev/loop1 $mapperName"
 
 #for initial debug
 if __name__ == '__main__':
-    _patchGrubLegacyConfig("/boot/grub/grub.conf" , "EDA")
+    with open("/tmp/script.sh", "w") as f:
+        f.write(test_script)
+    os.chmod("/tmp/script.sh", stat.S_IRWXU)
+    RunCommand(["bash" , "/tmp/script.sh"])
+
+    InstallGrub("/tmp/mnt" , "/dev/loop1")
+    #_patchGrubLegacyConfig("/boot/grub/grub.conf" , "EDA")

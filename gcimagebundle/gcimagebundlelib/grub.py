@@ -79,7 +79,7 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     if original_menu_contents.find("uuid ") != -1:
         root_row = "uuid " + partition_uuid 
     else:
-        root_row = "root (hd0,1)"
+        root_row = "root (hd0,0)"
 
     entry_contents = "\n" + root_row+ "\n"+linux_row + "\n"
     

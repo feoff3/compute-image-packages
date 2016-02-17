@@ -50,20 +50,22 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
         default = match.group(0)
         default = int(default.split("=")[1])
 
-    matches = re.findall("title(?:(?!\ntitle).)*", grub_conf, re.MULTILINE)
+    matches = re.findall("title(?:(?!\ntitle).[^\n])*", grub_conf, re.MULTILINE)
     #*\s.*\n.*\n.*\n.*",grub_conf, re.MULTILINE)
     
     # getting the default entry
-    original_menuentry = str(matches[default])
-    logging.debug("Found title " + original_menuentry)
-    original_title = original_menuentry[:original_menuentry.find("\n")]
+    original_title = str(matches[default])
+    logging.debug("Found title " + original_title)
+    original_menu_entry = grub_conf[grub_conf.find(original_title):]
+    #find the next title after that
+    original_menu_entry = original_menu_entry[:original_menu_entry.find("title" , 6)]
     original_menu_contents = original_menuentry[original_menuentry.find("\n")+1:]
 
     # we use the same linux kernel and parms just switching its root
     # regexp supports linux and linux16 dericitives
     matches = re.findall("kernel*\s.*$" , original_menu_contents, re.MULTILINE)
     if len(matches) == 0:
-        logging.error("!!!ERROR: Couldn't parse grub config menu entry! No linux entry found! ")
+        logging.error("!!!ERROR: Couldn't parse grub config menu entry! No kernel entry found! ")
         logging.error("Config " + original_menuentry)
         raise LookupError()
     linux_row = matches[0]
@@ -71,13 +73,12 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     linux_row = re.sub("root=([^\s]*)" , "root=/dev/disk/by-uuid/"+partition_uuid , linux_row)
     linux_row = linux_row.replace("console=ttyS0" , "") #switch serial console off
     linux_row = linux_row + " fastboot" #turn fastboot to switch of fsck (check of all filesystems. if more than one fs available it may start complaining during the boot)
-    linux_row = linux_row + " fastboot" #turn fastboot to switch of fsck (check of all filesystems. if more than one fs available it may start complaining during the boot)
     
-    root_row = re.findall("root *\s.*" , original_menu_contents, re.MULTILINE)[0]
     # see uuid options for various ubuntu distros here https://forums.opensuse.org/showthread.php/414356-Correct-menu-lst
-    root_row = re.sub("root *\s.*" , "uuid " + partition_uuid  , root_row)
-   
-    entry_contents = entry_contents + "\n" + root_row+ "\n"+linux_row + "\n"
+    # TODO: check if it works on non-ubuntu kernels
+    root_row = "uuid " + partition_uuid 
+
+    entry_contents = "\n" + root_row+ "\n"+linux_row + "\n"
     
     #then we add initrd entry as-is
     matches = re.findall("initrd.*$" , original_menu_contents, re.MULTILINE)

@@ -229,10 +229,8 @@ def InstallGrub(mount_point , partition_dev):
         legacy_commands = PrepareLegacyCommands(real_diskpath)
 
     grub_command = "grub2-install"
-    try:
-        version = RunCommand([grub_command , "--version"], ignore_non_existant=True)
-    except OSError as e:
-        #then there is no such command, try other one
+    version = RunCommand([grub_command , "--version"], ignore_non_existant=True)
+    if not version:
         grub_command = "grub-install"
     version = RunCommand([grub_command , "--version"])
     version = version.strip()

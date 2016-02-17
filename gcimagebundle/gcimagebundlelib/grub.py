@@ -172,10 +172,11 @@ def _patchGrubConfig(grub_conf_path , partition_uuid):
     grub_conf_file.write(replaced_grub)
     grub_conf_file.close()
 
-def InstallGrub(mount_point , partition_dev):
-    """Adds Grub boot loader to the disk and points it to boot from the partition"""
-    logging.info(">>> Applying GRUB configuration")
+def DetectDisk(partition_dev):
+    """detects disk device by a partition dev"""
     partition_path = partition_dev
+
+    # here we get basic disk of the partition
     logging.info("The partition is " + partition_path)
     if "/dev/loop" in str(partition_path) and len(str(partition_path)) == len("/dev/loop") + 1: # to distinguish /dev/loop1p1 from /dev/loop1
         #in case we use extra loop for mapping the partition
@@ -191,13 +192,40 @@ def InstallGrub(mount_point , partition_dev):
     else:
         logging.error("!!!ERROR: cannot find a partition \ disk to install GRUB")
         raise OSError("Cannot find partition to install GRUB")
+
+    return diskpath
+
+def DetectBackingFile(diskpath):
+    """detects disk device by a partition dev"""
+    real_diskpath = diskpath
+    # here we check if disk is represented by a loopback to a file - grub 1 will need a path to file not disk
+    if "/dev/loop" in diskpath: 
+        #in case we use extra loop for mapping the partition
+        losetup_out = RunCommand(["losetup" , diskpath])
+        #we deduce the disk path
+        real_diskpath = losetup_out[losetup_out.find('(')+1:losetup_out.find(')')]
+        logging.info(real_diskpath + " is a backing dev/file behind the disk dev " + diskpath)
+    return real_diskpath
+
+def PrepareLegacyCommands(real_diskpath):
+    """prepares commands to path to grub utility"""
+    return "device (hd0)" + real_diskpath +  "\nroot (hd0,0)\n setup (hd0)"
+
+def InstallGrub(mount_point , partition_dev):
+    """Adds Grub boot loader to the disk and points it to boot from the partition"""
+    logging.info(">>> Applying GRUB configuration")
     
-    devmap = mount_point+"/boot/device.map"
-    with open(devmap,"w") as f:
-        f.write("(hd0)   "+str(diskpath)+"\n(hd0,1) "+partition_dev)
-        f.close()
-    # install grub2 there
-    # NOTE: GRUB2 settings and kernel\initrd images should be imported from the local disk!
+    diskpath = DetectDisk(partition_dev)
+    
+    # choose grub1 or grub2
+    legacy = 0
+    if os.path.exists(mount_point+"/boot/grub/grub.conf"):
+        legacy = 1
+        logging.info(">>>> Grub Legacy has been detected")
+        #prepare grub command line
+        real_diskpath = DetectBackingFile(diskpath)
+        legacy_commands = PrepareLegacyCommands(real_diskpath)
+
     grub_command = "grub2-install"
     try:
         version = RunCommand([grub_command , "--version"])
@@ -205,15 +233,11 @@ def InstallGrub(mount_point , partition_dev):
         #then there is no such command, try other one
         grub_command = "grub-install"
     version = RunCommand([grub_command , "--version"])
-    logging.info(">>>> Using Grub 0.9 Installing profile")
     version = version.strip()
     logging.info(">>> Grub version detected: " + version + " (0.9+ is required)")
-    legacy = 0
-    if os.path.exists(mount_point+"/boot/grub/grub.conf"):
-        legacy = 1
-        logging.info(">>>> Grub Legacy has been detected")
+    
     if legacy == 1:
-        RunCommand([grub_command , "--root-directory=" + mount_point , str(diskpath)])
+        RunCommand(["grub" , "--batch" , "--device-map=/dev/null"] , input_str=legacy_commands)
     else:
         RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
@@ -245,10 +269,10 @@ losetup /dev/loop1 $mapperName"
 
 #for initial debug
 if __name__ == '__main__':
-    with open("/tmp/script.sh", "w") as f:
-        f.write(test_script)
-    os.chmod("/tmp/script.sh", stat.S_IRWXU)
-    RunCommand(["bash" , "/tmp/script.sh"])
+    #with open("/tmp/script.sh", "w") as f:
+    #    f.write(test_script)
+    #os.chmod("/tmp/script.sh", stat.S_IRWXU)
+    #RunCommand(["bash" , "/tmp/script.sh"])
 
     InstallGrub("/tmp/mnt" , "/dev/loop1")
     #_patchGrubLegacyConfig("/boot/grub/grub.conf" , "EDA")

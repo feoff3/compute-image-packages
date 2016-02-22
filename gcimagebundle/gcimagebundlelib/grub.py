@@ -224,7 +224,7 @@ def InstallGrub(mount_point , partition_dev):
     
     # choose grub1 or grub2
     legacy = 0
-    if os.path.exists(mount_point+"/boot/grub/grub.conf"):
+    if not (os.path.exists(mount_point+"/boot/grub/grub.cfg") or os.path.exists(mount_point + "/boot/grub2/grub.cfg")):
         legacy = 1
         logging.info(">>>> Grub Legacy has been detected")
         #prepare grub command line

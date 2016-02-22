@@ -168,6 +168,8 @@ class FsRawDisk(fs_copy.FsCopy):
       mount_point = tempfile.mkdtemp(dir=self._scratch_dir)
       with utils.MountFileSystem(devices[0], mount_point, self._fs_type):
         logging.info('Copying contents')
+        #feoff: temporary disable selinux to ensure rsync works fine, see https://github.com/GoogleCloudPlatform/compute-image-packages/issues/132
+        selinux_state = self._setSELinux("0")
         self._CopySourceFiles(mount_point)
         self._CopyPlatformSpecialFiles(mount_point)
         self._ProcessOverwriteList(mount_point)
@@ -181,6 +183,7 @@ class FsRawDisk(fs_copy.FsCopy):
         if add_grub:
             from gcimagebundlelib import grub
             grub.InstallGrub(mount_point, devices[0])
+        self._setSELinux(selinux_state)
    
 
     tar_entries = []
@@ -207,6 +210,26 @@ class FsRawDisk(fs_copy.FsCopy):
       for chunk in iter(lambda: tar_file.read(8192), ''):
         h.update(chunk)
     return (self._fs_size, h.hexdigest())
+
+  def _setSELinux(self, state):
+      """ sets SELinux temporary
+
+      Args:
+         state - Previous selinux state string ("0" or "1")
+
+      Returns string ("0" or "1") representing previous selinux state
+      """
+      try:
+        with open("/selinux/enforce" , "r") as f:
+            prev = f.read()
+        with open("/selinux/enforce" , "w") as f:
+            f.write(state)
+        return prev
+      except Exception as e:
+          logging.warn("!Cannot reset SELinux state")
+          logging.warn(str(e))
+      
+      return ""
 
  
   def _SetDhcp(self, mount_point):

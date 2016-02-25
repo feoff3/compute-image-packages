@@ -276,8 +276,10 @@ def Rsync(src, dest, exclude_file, ignore_hard_links, recursive, xattrs, verbose
     with open(exclude_file, 'rb') as excludes:
       for line in excludes:
         logging.debug('  %s', line.rstrip())
-
-  RunCommand(rsync_cmd , poll_stdout=verbose)
+  try:
+    RunCommand(rsync_cmd , poll_stdout=verbose)
+  except subprocess.CalledProcessError as e:
+    raise Exception("rsync return error(%i). Maybe not enough disk space to copy files into '%s' directory" % (e.returncode, str(dest)))
 
 
 def GetUUID(partition_path):

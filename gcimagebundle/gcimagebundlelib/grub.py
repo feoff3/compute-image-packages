@@ -240,7 +240,11 @@ def InstallGrub(mount_point , partition_dev):
     logging.info(">>> Grub version detected: " + version + " (0.9+ is required)")
     
     if legacy == 1:
-        RunCommand(["grub" , "--batch" , "--device-map=/dev/null"] , input_str=legacy_commands)
+        grub_return = RunCommand(["grub" , "--batch" , "--device-map=/dev/null"] , input_str=legacy_commands)
+        # grub returns errors to stdout without returning bad output
+        if 'Error' in grub_return:
+            logging.warn("! Grub installation utility return error in one of the operations")
+            logging.warn(grub_return)
     else:
         RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])

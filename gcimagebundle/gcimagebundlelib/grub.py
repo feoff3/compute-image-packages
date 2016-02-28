@@ -214,7 +214,7 @@ def DetectBackingFile(diskpath):
 
 def PrepareLegacyCommands(real_diskpath):
     """prepares commands to path to grub utility"""
-    return "device (hd0)" + real_diskpath +  "\nroot (hd0,0)\n setup (hd0)\nquit\n"
+    return "device (hd0) " + real_diskpath +  "\nroot (hd0,0)\n setup (hd0)\nquit\n"
 
 def InstallGrub(mount_point , partition_dev):
     """Adds Grub boot loader to the disk and points it to boot from the partition"""

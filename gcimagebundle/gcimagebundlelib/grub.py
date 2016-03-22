@@ -41,16 +41,15 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     grub_conf_file.close()
 
     # seek for default entry
-    match=re.search("default=[0-9]", grub_conf , re.MULTILINE)
+    match=re.search("default[= \t]+([0-9])", grub_conf , re.MULTILINE)
     default = 0
     if match == None:
         default = 0
         logging.info("Found no default entry in grub config")
     else:
-        default = match.group(0)
-        default = int(default.split("=")[1])
+        default = int(match.group(1))
 
-    matches = re.findall("title(?:(?!\ntitle).[^\n])*", grub_conf, re.MULTILINE)
+    matches = re.findall("\n[ \t]*title(?:(?!\ntitle).[^\n])*", grub_conf, re.MULTILINE)
     #*\s.*\n.*\n.*\n.*",grub_conf, re.MULTILINE)
     
     # getting the default entry
@@ -66,7 +65,7 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
     matches = re.findall("kernel*\s.*$" , original_menu_contents, re.MULTILINE)
     if len(matches) == 0:
         logging.error("!!!ERROR: Couldn't parse grub config menu entry! No kernel entry found! ")
-        logging.error("Config " + original_menuentry)
+        logging.error("Config " + original_menu_entry)
         raise LookupError()
     linux_row = matches[0]
     linux_row = re.sub("\s/(?!boot)" , " /boot/" , linux_row) # replace any path to /boot (sometimes grub points to / instead of /boot)
@@ -280,8 +279,8 @@ if __name__ == '__main__':
     #    f.write(test_script)
     #os.chmod("/tmp/script.sh", stat.S_IRWXU)
     #RunCommand(["bash" , "/tmp/script.sh"])
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
-    logging.getLogger().addHandler(handler)
-    InstallGrub("/tmp/mnt" , "/dev/loop1")
-    #_patchGrubLegacyConfig("/boot/grub/grub.conf" , "EDA")
+    #handler = logging.StreamHandler()
+    #handler.setLevel(logging.DEBUG)
+    #logging.getLogger().addHandler(handler)
+    #InstallGrub("/tmp/mnt" , "/dev/loop1")
+    _patchGrubLegacyConfig("/grub1.conf" , "EDA")

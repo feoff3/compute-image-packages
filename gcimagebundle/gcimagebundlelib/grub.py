@@ -62,7 +62,7 @@ def _patchGrubLegacyConfig(grub_conf_path , partition_uuid):
 
     # we use the same linux kernel and parms just switching its root
     # regexp supports linux and linux16 dericitives
-    matches = re.findall("kernel*\s.*$" , original_menu_contents, re.MULTILINE)
+    matches = re.findall("\n[ \t]*kernel*\s.*$" , original_menu_contents, re.MULTILINE)
     if len(matches) == 0:
         logging.error("!!!ERROR: Couldn't parse grub config menu entry! No kernel entry found! ")
         logging.error("Config " + original_menu_entry)

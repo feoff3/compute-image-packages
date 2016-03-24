@@ -245,7 +245,7 @@ def InstallGrub(mount_point , partition_dev):
             logging.warn("! Grub installation utility return error in one of the operations")
             logging.warn(grub_return)
     else:
-        RunCommand([grub_command , "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
+        RunCommand([grub_command , "--target=i386-pc",  "--root-directory=" + mount_point , "--modules=ext2 linux part_msdos xfs gzio normal" , str(diskpath)])
     uuid = RunCommand(["blkid", "-s", "UUID", "-o" , "value", partition_dev])
     uuid = str(uuid).strip()
     if legacy == 1:

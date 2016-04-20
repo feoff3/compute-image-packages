@@ -143,9 +143,6 @@ class FsRawDisk(fs_copy.FsCopy):
       # User didn't specify a disk device. Initialize a device with a simple
       # partition table.
       self._ResizeFile(disk_file_path, self._fs_size)
-      
-      #feoff: it's not just a log ensure the size changed. we ensure the size is changed and OS updated info on it. needed in FUSE scenario
-      logging.info("Preparing file disk size " + str(os.path.getsize(disk_file_path)) + " bytes")
 
       # User didn't specify a disk to copy. Create a new partition table
       utils.MakePartitionTable(disk_file_path)
@@ -155,8 +152,13 @@ class FsRawDisk(fs_copy.FsCopy):
 
     # Create a new partition starting at partition_start of size
     # self._fs_size - partition_start. 
+
+    #feoff: it's not just a log ensure the size changed. we ensure the size is changed and OS updated info on it. needed in FUSE scenario
     utils.MakePartition(disk_file_path, 'primary', 'ext2', partition_start,
                         self._fs_size-512) # feoff: THE LAST PARM IS THE LAST SECTOR! , not size!
+
+    logging.info("Preparing file disk size " + str(os.path.getsize(disk_file_path)) + " bytes")
+
     with utils.LoadDiskImage(disk_file_path) as devices:
       # For now we only support disks with a single partition.
       if len(devices) != 1:

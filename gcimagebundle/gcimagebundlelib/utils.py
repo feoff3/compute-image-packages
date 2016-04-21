@@ -227,8 +227,8 @@ def MakeFileSystem(dev_path, fs_type, uuid=None):
     uuid = RunCommand(['uuidgen']).strip()
   if uuid is None:
     raise MakeFileSystemException(dev_path)
-
-  mkfs_cmd = ['mkfs', '-t', fs_type, dev_path]
+  # TODO: make fs options parametrizable 
+  mkfs_cmd = ['mkfs', '-t', "-E", "lazy_itable_init=1" , fs_type, dev_path]
   RunCommand(mkfs_cmd)
 
   if fs_type is 'xfs':

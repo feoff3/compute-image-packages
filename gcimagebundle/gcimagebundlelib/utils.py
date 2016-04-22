@@ -102,7 +102,12 @@ class LoadDiskImage(object):
     time.sleep(2)
 
     if self._part_loop:
-        RunCommand(["losetup" , '-d' , self._part_loop ])
+        try:
+            RunCommand(["losetup" , '-d' , self._part_loop ])
+        except Exception as e:
+            logging.debug("Cannot detach, waiting for more 2 mins till sync is done")
+            sleep(120)
+            RunCommand(["losetup" , '-d' , self._part_loop ])
 
     time.sleep(2)
 

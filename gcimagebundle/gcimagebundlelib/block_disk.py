@@ -142,6 +142,7 @@ class FsRawDisk(fs_copy.FsCopy):
 
       # User didn't specify a disk device. Initialize a device with a simple
       # partition table.
+      logging.info("Setting partiton size: " + str(self._fs_size) )
       self._ResizeFile(disk_file_path, self._fs_size)
 
       # User didn't specify a disk to copy. Create a new partition table

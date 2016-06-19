@@ -34,6 +34,8 @@ class Centos(linux.LinuxPlatform):
       (_, _, flavor, _) = Centos.ParseRedhatRelease(release_file)
       if flavor and flavor.lower() == 'centos':
         return True
+      if flavor and flavor.lower() == 'shmz': #SHMZ is centos 6.5 fork - used by PBX distro
+        return True
     return False
 
   @staticmethod

@@ -340,6 +340,13 @@ class FsRawDisk(fs_copy.FsCopy):
     if os.path.exists(net_rules_path):
       os.remove(net_rules_path)
 
+    net_rules_path = os.path.join(
+        mount_point,
+        'lib/udev/rules.d/70-persistent-net.rules')
+    if os.path.exists(net_rules_path):
+      os.remove(net_rules_path)
+
+
   def _UpdateFstab(self, mount_point, uuid):
     """Update /etc/fstab with the new root fs UUID."""
     fstab_path = os.path.join(mount_point, 'etc/fstab')

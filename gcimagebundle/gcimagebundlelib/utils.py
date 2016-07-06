@@ -188,7 +188,7 @@ def MakePartitionTable(file_path):
   Args:
     file_path: A path to a file where a partition table will be created.
   """
-  RunCommand(['parted', file_path, 'mklabel', 'msdos'])
+  RunCommand(['parted', '-s' , file_path, 'mklabel', 'msdos'])
 
 
 def MakePartition(file_path, partition_type, fs_type, start, end):
@@ -202,12 +202,12 @@ def MakePartition(file_path, partition_type, fs_type, start, end):
     start: Start offset of a partition in bytes.
     end: End offset of a partition in bytes.
   """
-  parted_cmd = ['parted', file_path, 'unit B', 'mkpart', partition_type,
+  parted_cmd = ['parted', '-s', file_path, 'unit B', 'mkpart', partition_type,
                 fs_type, str(start), str(end)]
   RunCommand(parted_cmd)
   # set boot 
   # TODO: move to separate function
-  parted_cmd = ['parted', file_path, 'set', '1'  , 'boot' , 'on']
+  parted_cmd = ['parted', '-s', file_path, 'set', '1'  , 'boot' , 'on']
   RunCommand(parted_cmd)
 
 
@@ -350,7 +350,7 @@ def GetPartitionStart(disk_path, partition_number):
     subprocess.CalledProcessError: If running parted fails.
     IndexError: If there is no partition at the given number.
   """
-  parted_cmd = ['parted',
+  parted_cmd = ['parted', '-s',
                 disk_path,
                 'unit B',
                 'print']

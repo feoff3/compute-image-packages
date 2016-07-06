@@ -202,7 +202,8 @@ class FsRawDisk(fs_copy.FsCopy):
 
     tar_entries.append(disk_file_path)
     
-    logging.info('Creating tar.gz archive')
+    #TODO(feoff): make it parametrizable - if to start tar or not
+   # logging.info('Creating tar.gz archive')
     utils.TarAndGzipFile(tar_entries,
                          self._output_tarfile)
     # Removed the deletion of file
@@ -233,8 +234,8 @@ class FsRawDisk(fs_copy.FsCopy):
             f.write(state)
         return prev
       except Exception as e:
-          logging.warn("!Cannot reset SELinux state")
-          logging.warn(str(e))
+          logging.info("Cannot reset SELinux state")
+          logging.info(str(e))
       
       return ""
 
@@ -334,6 +335,7 @@ class FsRawDisk(fs_copy.FsCopy):
 
   def _CleanupNetwork(self, mount_point):
     """Remove any record of our current MAC address."""
+    # remove udev
     net_rules_path = os.path.join(
         mount_point,
         'lib/udev/rules.d/75-persistent-net-generator.rules')
@@ -345,6 +347,13 @@ class FsRawDisk(fs_copy.FsCopy):
         'lib/udev/rules.d/70-persistent-net.rules')
     if os.path.exists(net_rules_path):
       os.remove(net_rules_path)
+
+    # remove default network config 
+    network_path = os.path.join(
+        mount_point,
+        '/mnt/etc/sysconfig/network')
+    if os.path.exists(network_path):
+      open(network_path , "w").write("NETWORKING=yes")
 
 
   def _UpdateFstab(self, mount_point, uuid):
